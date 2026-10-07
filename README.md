@@ -63,5 +63,7 @@ Everyone then plays the same game and mode. With the same seed, everyone gets id
 ## The games
 
 Card Game: Trading against a market on hidden card values
+
 Dice: Game: Trading against a market on hidden dice values with smaller tick sizing
+
 Trading Game: Making a marking and taking against bot markets on hidden card values
