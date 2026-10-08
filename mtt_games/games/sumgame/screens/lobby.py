@@ -56,28 +56,37 @@ class LobbyScreen(Screen):
         super().__init__()
         self.ui = ui
         self.presets = ui.source.presets
+        extras = [label for label, _ in ui.menu_extras]
+        at = MENU.index("HOW TO PLAY") + 1
+        self.menu = MENU[:at] + extras + MENU[at:]
 
     def compose(self) -> ComposeResult:
         yield top_bar(self.ui.source, self.ui.crumb, "", self.presets["EASY"].budget, id="topbar")
         with Vertical(id="lobby-body"):
             yield Static(self.ui.banner, id="banner")
-            sub = Text("GAME", style=f"bold {AMBER}")
-            sub.append(f" · {self.ui.tagline}", style=DIM)
+            if self.ui.subtitle is not None:
+                sub = Text(self.ui.subtitle, style=DIM)
+            else:
+                sub = Text("GAME", style=f"bold {AMBER}")
+                sub.append(f" · {self.ui.tagline}", style=DIM)
             yield Static(sub, id="subtitle")
             with Horizontal(id="lobby-panels"):
-                yield TitledPanel("SELECT MODE", RowList(MENU, id="menu"), double=True, id="select")
+                yield TitledPanel("SELECT MODE", RowList(self.menu, id="menu"), double=True, id="select")
                 yield TitledPanel("MODES", Static(modes_table(self.ui, "EASY"), id="modes-table"), id="modes")
         yield KeyBar([("↑↓", "move"), ("⏎", "start"), ("C", "custom"), ("H", "how to play"), ("Q", "quit")])
 
     def on_row_list_moved(self, message: RowList.Moved) -> None:
-        item = MENU[message.index]
+        item = self.menu[message.index]
         self.query_one("#modes-table", Static).update(modes_table(self.ui, item if item in MODES else None))
         if item in MODES:
             self.query_one(TopBar).set(balance=self.presets[item].budget)
 
     def on_row_list_chosen(self, message: RowList.Chosen) -> None:
-        item = MENU[message.index]
-        if item in MODES:
+        item = self.menu[message.index]
+        extras = dict(self.ui.menu_extras)
+        if item in extras:
+            self.app.push_screen(extras[item](self.ui))
+        elif item in MODES:
             start_session(self.app, self.presets[item], item, switch=False)
         elif item == "CUSTOM…":
             self.action_custom()

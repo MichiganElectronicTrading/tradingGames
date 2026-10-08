@@ -117,7 +117,7 @@ async def test_home_lists_all_three_games():
     app = MTTGamesApp()
     async with app.run_test(size=SIZE) as pilot:
         rows = [str(r) for r in app.screen.query_one("#game-list").rows]
-        assert [r.split()[0] for r in rows] == ["CARD", "DICE", "TRADING"]
+        assert [r.split()[0] for r in rows][:3] == ["CARD", "DICE", "TRADING"]
         await pilot.press("down", "down", "enter")
         await pilot.pause()
         assert isinstance(app.screen, LobbyScreen) and app.screen.ui.source.key == "trade"

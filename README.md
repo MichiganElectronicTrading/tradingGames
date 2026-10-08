@@ -66,4 +66,7 @@ Card Game: Trading against a market on hidden card values
 
 Dice: Game: Trading against a market on hidden dice values with smaller tick sizing
 
-Trading Game: Making a marking and taking against bot markets on hidden card values
+Trading Game: Making a market and taking against bot markets on hidden card values
+
+
+Outcry: Open market outcry across different rounds, trading a contracts hidden true value.

@@ -14,8 +14,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         epilog="example: mtt-games card --seed 42   (everyone on the same seed sees the same deals and quotes)",
     )
     parser.add_argument(
-        "game", nargs="?", choices=[g.key for g in GAMES],
-        help="open this game's lobby directly, skipping the home screen",
+        "game", nargs="?", choices=[g.key for g in GAMES], metavar="GAME",
+        help="open this game's lobby directly, skipping the home screen (" + ", ".join(g.key for g in GAMES) + ")",
     )
     parser.add_argument(
         "--seed", type=int, metavar="INT",

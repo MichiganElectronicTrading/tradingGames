@@ -154,6 +154,7 @@ class CustomScreen(Screen):
 
     def on_mount(self) -> None:
         self.query_one("#settings-list").focus()
+        self.query_one("#events-list").parent.display = bool(self.event_keys)  # a game may have no events
         self.refresh_all()
 
     # ── rows ────────────────────────────────────────────────────────────────
@@ -207,7 +208,7 @@ class CustomScreen(Screen):
 
     def action_toggle_event(self) -> None:
         events = self.query_one("#events-list", RowList)
-        if not events.has_focus:
+        if not events.has_focus or not self.event_keys:
             return
         key = self.event_keys[events.index]
         enabled = set(self.config.enabled_events) ^ {key}

@@ -32,10 +32,12 @@ class GameUI:
     custom_fields: Callable[[], list[Any]] | None = None  # Custom screen rows (list of custom.Field)
     howto: Callable[[], list[tuple[str, list[str]]]] | None = None  # how-to-play (title, paragraphs)
     first_screen: Callable[[Any], Screen] | None = None  # a new session's first screen
+    subtitle: str | None = None  # lobby line under the banner (default: "GAME · tagline")
+    menu_extras: tuple[tuple[str, Callable[[GameUI], Screen]], ...] = ()  # lobby items after HOW TO PLAY
 
     @property
     def source(self) -> Source:
-        return self.session_cls.ROUND.SOURCE
+        return getattr(self.session_cls, "SOURCE", None) or self.session_cls.ROUND.SOURCE
 
     @property
     def crumb(self) -> str:
