@@ -43,22 +43,6 @@ mtt-games card --seed 1234      # or: mtt-games dice --seed 1234 / mtt-games tra
 
 Everyone then plays the same game and mode. With the same seed, everyone gets identical deals, events, flips and quotes, so the only differences are the decisions people make. When the session ends, compare recaps; each one shows `SEED 1234` in its top bar. FINAL BALANCE shows who made the most money, but EDGE TAKEN is the fairer score, since LUCK is the same draw for everyone. Pressing R on the recap replays the seed for a rematch.
 
-## Controls
-
-| Screen | Keys |
-|---|---|
-| Home | ↑↓ move · ⏎ open · Q quit |
-| Lobby | ↑↓ move · ⏎ start · C custom · H how to play · Q quit · Esc home |
-| Custom | ↑↓ move · ←→ change value · Tab next panel · Space toggle event · ⏎ start (settings) / toggle (events) / load (presets) · S save preset · Esc back |
-| Round | B buy at the ask · S sell at the bid · P pass · ←→ size ±1 · shift+←→ size ±5 (choose-size modes) |
-| Reveal | type your P&L (digits and `-`; Dice also takes `.`) + ⏎ · W explain fair value · ⏎ next round |
-| Recap | R replay same seed · N next difficulty · E export CSV · L lobby · Q quit |
-| Trading Game · your market | type BID / ASK / SIZE (digits and `-`) · Tab next field · ⏎ show market |
-| Trading Game · fills | ⏎ skip the feed · ⏎ continue |
-| Trading Game · their market | B buy at the ask · S sell at the bid · P pass · ←→ size ±1 · ⏎ next turn (after you act) |
-| Trading Game · settle | type your hand P&L + ⏎ · W walkthrough · ⏎ next hand |
-| How to play | ↑↓ scroll · Esc back |
-| Stats | C clear stats (asks Y/N first; clears only this game's history) · Esc back |
 
 ## The games
 
