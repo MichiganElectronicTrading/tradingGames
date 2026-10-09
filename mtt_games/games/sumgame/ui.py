@@ -34,6 +34,7 @@ class GameUI:
     first_screen: Callable[[Any], Screen] | None = None  # a new session's first screen
     subtitle: str | None = None  # lobby line under the banner (default: "GAME · tagline")
     menu_extras: tuple[tuple[str, Callable[[GameUI], Screen]], ...] = ()  # lobby items after HOW TO PLAY
+    lobby_note: str | None = None  # a line under the lobby panels
 
     @property
     def source(self) -> Source:

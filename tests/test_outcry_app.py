@@ -177,7 +177,7 @@ async def test_home_lists_four_games_and_outcry_lobby():
     app = MTTGamesApp()
     async with app.run_test(size=SIZE) as pilot:
         rows = [str(r) for r in app.screen.query_one("#game-list").rows]
-        assert [r.split()[0] for r in rows] == ["CARD", "DICE", "TRADING", "OUTCRY"]
+        assert [r.split()[0] for r in rows] == ["CARD", "DICE", "TRADING", "OUTCRY", "ETF"]
         await pilot.press("down", "down", "down", "enter")
         await pilot.pause()
         lobby = app.screen

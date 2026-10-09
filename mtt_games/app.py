@@ -14,6 +14,7 @@ from textual.widgets import Static
 
 from mtt_games.games.card.ui import CARD_UI
 from mtt_games.games.dice.ui import DICE_UI
+from mtt_games.games.etf.ui import ETF_UI
 from mtt_games.games.outcry.ui import OUTCRY_UI
 from mtt_games.games.sumgame.screens.lobby import LobbyScreen as SumLobby
 from mtt_games.games.trade.ui import TRADE_UI
@@ -34,6 +35,7 @@ GAMES: list[GameInfo] = [
     GameInfo("dice", "DICE GAME", "Smaller Tick Sizing", partial(SumLobby, DICE_UI)),
     GameInfo("trade", "TRADING GAME", "You vs. 3-4 Traders", partial(SumLobby, TRADE_UI)),
     GameInfo("outcry", "OUTCRY", "8-Player Open Outcry", partial(SumLobby, OUTCRY_UI)),
+    GameInfo("etf", "ETF ARB", "Basket Arbitrage Race", partial(SumLobby, ETF_UI)),
 ]
 
 

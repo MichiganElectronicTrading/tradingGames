@@ -50,6 +50,7 @@ class LobbyScreen(Screen):
     LobbyScreen #select { width: 30; margin-right: 2; }
     LobbyScreen #modes { width: 1fr; }
     LobbyScreen #lobby-panels { height: auto; }
+    LobbyScreen #lobby-note { margin-top: 1; }
     """
 
     def __init__(self, ui: GameUI) -> None:
@@ -73,6 +74,8 @@ class LobbyScreen(Screen):
             with Horizontal(id="lobby-panels"):
                 yield TitledPanel("SELECT MODE", RowList(self.menu, id="menu"), double=True, id="select")
                 yield TitledPanel("MODES", Static(modes_table(self.ui, "EASY"), id="modes-table"), id="modes")
+            if self.ui.lobby_note:
+                yield Static(self.ui.lobby_note, id="lobby-note", classes="dim")
         yield KeyBar([("↑↓", "move"), ("⏎", "start"), ("C", "custom"), ("H", "how to play"), ("Q", "quit")])
 
     def on_row_list_moved(self, message: RowList.Moved) -> None:
