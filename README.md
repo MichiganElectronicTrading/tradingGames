@@ -64,6 +64,7 @@ Trading Game: Making a market and taking against bot markets on hidden card valu
 Outcry: Open market outcry across different rounds, trading a contracts hidden true value.
 
 ETF Arb: Price a basket of stocks and race 3 traders to trade the ETF when it drifts from its NAV
+
 Hi/Lo: Call the next card higher or lower (or red or black) and size each even-money bet by the Kelly criterion, against the clock
 
 ## Higher or Lower
@@ -73,22 +74,7 @@ met-games hilo                      # lobby: EASY · MEDIUM · HARD · RED/BLACK
 met-games hilo --seed 7 --deck full # same deck order for everyone; --deck interview|full|redblack
 ```
 
-**Rules.** One card is showing. Call the next card HIGHER or LOWER and stake a whole percent of your capital (0 = sit out). Bets pay even money. A same-rank card is a push. Aces are low (A=1 … K=13). Bets are untimed: take as long as you like. If capital falls below 1 you bust, which ends the game.
-
-**Keys.**
-
-| key | does |
-|---|---|
-| H / L or ↑ / ↓ (R / B or ↑ / ↓ on red/black) | pick the side: ↑ HIGHER (RED), ↓ LOWER (BLACK) |
-| 0–9 | stake 0–90% |
-| A | all-in |
-| ← → | −5% / +5% |
-| Shift+← / Shift+→, or [ / ] | previous / next multiple of 25% (0 · 25 · 50 · 75 · 100): 60 → 75 → 100, 60 → 50 → 25 |
-| ⏎ | lock (or skip the reveal) |
-
-With quick lock on (the default), pressing 0–9 or A after picking a side locks the bet immediately; the arrow keys and [ ] never lock. The bet screen's STAKE GUIDE panel shows these keys and your current combo.
-
-**Timed bets (Custom).** Turn on "timed bets" in Custom to get the old clock back, with the time per bet set in seconds (2–30). Each bet then has its own clock; running out is a stake-0 MISS that resets the streak. Speed multipliers apply, and the bet screen shows the CLOCK panel in place of the STAKE GUIDE.
+**Rules.** One card is showing. Call the next card HIGHER or LOWER and stake a whole percent of your capital (0 = sit out). Bets pay even money. A same-rank card is a push. Aces are low (A=1 … K=13). Keys: H/L (or R/B) pick the side; 0–9 stake 0–90%; A goes all-in; ←→ adds or removes 5%; ⏎ locks. With quick lock on, a stake key pressed after a side locks the bet immediately. If the clock runs out, the bet is a stake-0 MISS. If capital falls below 1 you bust, which ends the game.
 
 **Kelly sizing.** Among the cards left, h are higher than the showing card, l are lower, and the rest are the same rank. On an even-money bet the Kelly fraction is **k = |h − l| ÷ (h + l)** on the side with more cards; a push returns the stake, so it doesn't change k. If h = l there is no edge and the right play is to sit out. On red/black, k = |reds − blacks| ÷ (reds + blacks).
 
@@ -101,14 +87,14 @@ With quick lock on (the default), pressing 0–9 or A after picking a side locks
 | OK | right side, further off | 20 |
 | DISCIPLINE | no edge and you sat out | 50 |
 | SAT OUT | there was an edge and you sat out | 0 |
-| MISS | wrong side, or staked with no edge (timed bets: also running out of time) | 0 |
+| MISS | wrong side, staked with no edge, or timed out | 0 |
 
-**Scoring.** Points = base × combo, rounded half up.
-- **Combo:** ×(1 + 0.1 × streak), capped at ×3. PERFECT, GOOD and DISCIPLINE extend the streak; OK keeps it; MISS and SAT OUT reset it.
-- **Speed (timed bets only):** points = base × speed × combo. LIGHTNING ×2 if you lock in the first 25% of the bet's clock; FAST ×1.5 in the first 50%. Speed only applies to PERFECT, GOOD and DISCIPLINE, and a timeout also resets the streak.
+**Scoring.** Points = base × speed × combo, rounded half up.
+- **Speed:** LIGHTNING ×2 if you lock in the first 25% of the bet's clock; FAST ×1.5 in the first 50%. Speed only applies to PERFECT, GOOD and DISCIPLINE.
+- **Combo:** ×(1 + 0.1 × streak), capped at ×3. PERFECT, GOOD and DISCIPLINE extend the streak; OK keeps it; MISS, SAT OUT and a timeout reset it.
 - **End of game:** if you finish above your start without busting, you get a capital bonus of round(1000 × log2(final ÷ start)).
 - **End screen:** shows your multiple next to the **Kelly benchmark** (staking exactly k on the right side every bet of the same deck order) and your **worst bet** (the most points lost against the best play).
-- **High scores:** the top 10 for each deck and difficulty are kept in `~/.met_games/hilo_scores.json`. Untimed and timed games have separate tables; press T on the HIGH SCORES screen to switch.
+- **High scores:** the top 10 for each deck and difficulty are kept in `~/.met_games/hilo_scores.json`.
 
 **Decks.**
 
@@ -123,7 +109,7 @@ With quick lock on (the default), pressing 0–9 or A after picking a side locks
 | | EASY | MEDIUM | HARD |
 |---|---|---|---|
 | default deck | Interview | Full | Full |
-| time per bet | untimed | untimed | untimed |
+| time per bet | 10s | 6s | 4s |
 | board shows | counts, lower/same/higher and odds | counts and lower/same/higher | cards left and the last three |
 
 Press D in the lobby to switch decks.
@@ -135,17 +121,7 @@ Press D in the lobby to switch decks.
 - **Red/black:** there is no showing card; you bet on all 52 cards.
 - **Odds:** h, l and same are counted over every card left, including same-rank cards, which push.
 - **Grading:** k = 0 is checked first, so any stake on a no-edge bet is a MISS.
-- **Clock:** with timed bets, the clock is paused during the reveal flash (0.6s, or ⏎ to skip); the next bet's clock starts when it opens.
-- **Untimed by default:**
-  - The presets no longer carry a time per bet. Custom's "timed bets" toggle uses its seconds field, which starts at 10s for every preset; the old 6s (MEDIUM) and 4s (HARD) are gone.
-  - Untimed bets are graded at NORMAL speed (×1), so the review and LAST BETS never show a speed tier.
-  - The end screen's GRADES panel keeps best combo and best streak, but drops the LIGHTNING / FAST counts.
-- **Stake keys:**
-  - The key bar keeps "H/L side" in front of the new key list.
-  - Shift+arrows and [ ] snap from the current stake: a stake already on a multiple moves a full 25%, so 25 → 50 and 25 → 0.
-- **High-score tables:**
-  - The tables are now keyed deck/mode/untimed or deck/mode/timed, and each entry records `timed`.
-  - Every score saved before this change came from a timed game, so the old deck/mode tables are read as timed tables.
+- **Clock:** during the reveal flash (0.6s, or ⏎ to skip) the clock is paused; the next bet's clock starts when it opens.
 - **Benchmark:** stakes are floored to whole dollars, to match how your own stakes are sized (capital × percent, floored).
 - **Capital bonus:** measured against the starting capital; there is no bonus if you bust or finish at or below the start.
 - **Rounding:** points round half up.
