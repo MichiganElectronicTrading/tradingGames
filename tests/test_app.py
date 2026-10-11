@@ -7,23 +7,23 @@ import pytest
 
 from textual.widgets import Static
 
-from mtt_games.__main__ import build_app, parse_args
-from mtt_games.app import HomeScreen, MTTGamesApp
-from mtt_games.games.card.config import EASY
-from mtt_games.games.sumgame.screens.common import start_session
-from mtt_games.games.sumgame.screens.custom import CustomScreen
-from mtt_games.games.sumgame.screens.lobby import LobbyScreen
-from mtt_games.games.sumgame.screens.recap import RecapScreen
-from mtt_games.games.sumgame.screens.reveal import RevealScreen
-from mtt_games.games.sumgame.screens.round import RoundScreen
-from mtt_games.widgets import TopBar
+from met_games.__main__ import build_app, parse_args
+from met_games.app import HomeScreen, METGamesApp
+from met_games.games.card.config import EASY
+from met_games.games.sumgame.screens.common import start_session
+from met_games.games.sumgame.screens.custom import CustomScreen
+from met_games.games.sumgame.screens.lobby import LobbyScreen
+from met_games.games.sumgame.screens.recap import RecapScreen
+from met_games.games.sumgame.screens.reveal import RevealScreen
+from met_games.games.sumgame.screens.round import RoundScreen
+from met_games.widgets import TopBar
 
 SIZE = (150, 50)
 
 
 @pytest.fixture(autouse=True)
 def isolated_home(tmp_path, monkeypatch):
-    monkeypatch.setenv("MTT_GAMES_HOME", str(tmp_path))
+    monkeypatch.setenv("MET_GAMES_HOME", str(tmp_path))
     return tmp_path
 
 
@@ -32,7 +32,7 @@ def key_names(value: int) -> list[str]:
 
 
 async def test_easy_session_reaches_recap(isolated_home):
-    app = MTTGamesApp(seed=42)
+    app = METGamesApp(seed=42)
     async with app.run_test(size=SIZE) as pilot:
         assert isinstance(app.screen, HomeScreen)
         await pilot.press("enter")
@@ -110,7 +110,7 @@ def test_cli_args_and_help(capsys):
 
 
 async def test_recap_shows_out_of_risk_reason():
-    app = MTTGamesApp(seed=5)
+    app = METGamesApp(seed=5)
     async with app.run_test(size=SIZE) as pilot:
         start_session(app, EASY.replace(budget=1), "CUSTOM", switch=False)
         await pilot.pause()
@@ -120,7 +120,7 @@ async def test_recap_shows_out_of_risk_reason():
 
 
 async def test_other_screens_open_and_close():
-    app = MTTGamesApp()
+    app = METGamesApp()
     async with app.run_test(size=SIZE) as pilot:
         await pilot.press("enter")
         for key in ("h", "c"):
@@ -137,7 +137,7 @@ async def test_other_screens_open_and_close():
 
 
 async def test_custom_screen_edits_and_validates():
-    app = MTTGamesApp()
+    app = METGamesApp()
     async with app.run_test(size=SIZE) as pilot:
         await pilot.press("enter", "c")
         await pilot.pause()
@@ -163,7 +163,7 @@ def typed(text: str) -> list[str]:
 
 
 async def test_home_lists_both_games():
-    app = MTTGamesApp()
+    app = METGamesApp()
     async with app.run_test(size=SIZE) as pilot:
         rows = [str(r) for r in app.screen.query_one("#game-list").rows]
         assert any("CARD GAME" in r for r in rows) and any("DICE GAME" in r for r in rows)

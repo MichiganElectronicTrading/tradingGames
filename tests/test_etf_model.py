@@ -7,8 +7,8 @@ from fractions import Fraction
 
 import pytest
 
-from mtt_games.games.etf.config import EASY, HARD, MEDIUM, PRESETS, EtfConfig
-from mtt_games.games.etf.model import (
+from met_games.games.etf.config import EASY, HARD, MEDIUM, PRESETS, EtfConfig
+from met_games.games.etf.model import (
     REBAL,
     REVERSE,
     SPLIT,
@@ -131,7 +131,7 @@ def test_gap_distribution_has_skip_and_trade_rounds_and_is_symmetric(name, chanc
 
 def test_right_call_skips_are_rarest_on_easy():
     """Trade rounds are most common on EASY, then MEDIUM; HARD keeps the original ~1 in 4 skip rounds."""
-    from mtt_games.games.etf.model import right_call
+    from met_games.games.etf.model import right_call
 
     def skip_share(cfg):
         plans = [p for m in markets(cfg.replace(rounds=10), range(400)) for p in m.rounds]

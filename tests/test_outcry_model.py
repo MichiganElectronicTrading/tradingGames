@@ -15,8 +15,8 @@ from itertools import product
 
 import pytest
 
-from mtt_games.games.outcry.config import EASY, HARD, MEDIUM, OutcryConfig
-from mtt_games.games.outcry.model import (
+from met_games.games.outcry.config import EASY, HARD, MEDIUM, OutcryConfig
+from met_games.games.outcry.model import (
     HIGHEST,
     LOWEST,
     Knowledge,

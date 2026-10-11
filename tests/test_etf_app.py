@@ -7,18 +7,18 @@ from decimal import ROUND_HALF_UP, Decimal
 import pytest
 from textual.widgets import Static
 
-from mtt_games.__main__ import build_app, parse_args
-from mtt_games.app import MTTGamesApp
-from mtt_games.games.etf.config import EASY, HARD, MEDIUM
-from mtt_games.games.etf.engine import YOU, EtfGame
-from mtt_games.games.etf.model import BUY, SELL, draw_market, nav
-from mtt_games.games.etf.screens.common import basket_table
-from mtt_games.games.etf.screens.recap import RecapScreen
-from mtt_games.games.etf.screens.result import ResultScreen
-from mtt_games.games.etf.screens.round import RoundScreen
-from mtt_games.games.etf.stats import leaderboard
-from mtt_games.games.sumgame.screens.lobby import LobbyScreen
-from mtt_games.widgets import KeyButton
+from met_games.__main__ import build_app, parse_args
+from met_games.app import METGamesApp
+from met_games.games.etf.config import EASY, HARD, MEDIUM
+from met_games.games.etf.engine import YOU, EtfGame
+from met_games.games.etf.model import BUY, SELL, draw_market, nav
+from met_games.games.etf.screens.common import basket_table
+from met_games.games.etf.screens.recap import RecapScreen
+from met_games.games.etf.screens.result import ResultScreen
+from met_games.games.etf.screens.round import RoundScreen
+from met_games.games.etf.stats import leaderboard
+from met_games.games.sumgame.screens.lobby import LobbyScreen
+from met_games.widgets import KeyButton
 
 SIZE = (150, 50)
 
@@ -33,7 +33,7 @@ class FakeClock:
 
 @pytest.fixture(autouse=True)
 def isolated_home(tmp_path, monkeypatch):
-    monkeypatch.setenv("MTT_GAMES_HOME", str(tmp_path))
+    monkeypatch.setenv("MET_GAMES_HOME", str(tmp_path))
     monkeypatch.chdir(tmp_path)
     return tmp_path
 
@@ -121,10 +121,10 @@ async def test_hard_event_round_shows_the_banner_and_flags_the_row():
 
 
 async def test_home_lists_all_five_games_and_etf_lobby():
-    app = MTTGamesApp()
+    app = METGamesApp()
     async with app.run_test(size=SIZE) as pilot:
         rows = [str(r) for r in app.screen.query_one("#game-list").rows]
-        assert [r.split()[0] for r in rows] == ["CARD", "DICE", "TRADING", "OUTCRY", "ETF"]
+        assert [r.split()[0] for r in rows] == ["CARD", "DICE", "TRADING", "OUTCRY", "ETF", "HI/LO"]
         await pilot.press("down", "down", "down", "down", "enter")
         await pilot.pause()
         lobby = app.screen
@@ -219,6 +219,6 @@ def test_change_column_and_last_nav_title():
     total = sum(Decimal(d) for d in deltas)
     assert g.market.nav_before(2) + total == plan.nav  # what the player can add up
     assert all(len(d.lstrip("+-").split(".")[1]) == 1 for d in deltas if d != "0")  # tenths on MEDIUM
-    from mtt_games.games.etf.screens.common import last_nav_title
+    from met_games.games.etf.screens.common import last_nav_title
 
     assert last_nav_title(g, plan, "BASKET") == f"BASKET · last NAV {g.rounds[0].plan.nav:.1f}"

@@ -7,10 +7,10 @@ import random
 
 import pytest
 
-from mtt_games.games.outcry.book import BID, OFFER
-from mtt_games.games.outcry.commands import BOTH, CommandError, parse_command
-from mtt_games.games.outcry.config import EASY, HARD, MEDIUM
-from mtt_games.games.outcry.engine import (
+from met_games.games.outcry.book import BID, OFFER
+from met_games.games.outcry.commands import BOTH, CommandError, parse_command
+from met_games.games.outcry.config import EASY, HARD, MEDIUM
+from met_games.games.outcry.engine import (
     CLOSED,
     OPEN,
     OUTCRY_KIND,
@@ -26,7 +26,7 @@ from mtt_games.games.outcry.engine import (
     ticks,
     trade_score,
 )
-from mtt_games.games.outcry.traders import BUY, PASS, SELL, Trader
+from met_games.games.outcry.traders import BUY, PASS, SELL, Trader
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 

@@ -3,17 +3,17 @@
 import pytest
 from textual.app import App, ComposeResult
 
-from mtt_games.__main__ import build_app, parse_args
-from mtt_games.games.dice.config import HARD
-from mtt_games.games.dice.engine import DICE, DiceSession, Die
-from mtt_games.games.dice.ui import DieWidget, die_widget
-from mtt_games.games.sumgame.screens.reveal import RevealScreen
-from mtt_games.games.sumgame.screens.round import RoundScreen
+from met_games.__main__ import build_app, parse_args
+from met_games.games.dice.config import HARD
+from met_games.games.dice.engine import DICE, DiceSession, Die
+from met_games.games.dice.ui import DieWidget, die_widget
+from met_games.games.sumgame.screens.reveal import RevealScreen
+from met_games.games.sumgame.screens.round import RoundScreen
 
 
 @pytest.fixture(autouse=True)
 def isolated_home(tmp_path, monkeypatch):
-    monkeypatch.setenv("MTT_GAMES_HOME", str(tmp_path))
+    monkeypatch.setenv("MET_GAMES_HOME", str(tmp_path))
 
 
 def pips(w: DieWidget) -> int:

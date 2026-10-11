@@ -1,6 +1,6 @@
 import pytest
 
-from mtt_games.games.card.config import EASY, HARD, MEDIUM, PRESETS, CardConfig
+from met_games.games.card.config import EASY, HARD, MEDIUM, PRESETS, CardConfig
 
 
 @pytest.mark.parametrize("cfg", [EASY, MEDIUM, HARD])

@@ -11,8 +11,8 @@ import random
 
 import pytest
 
-from mtt_games.games.card.deck import Card
-from mtt_games.games.card.engine import market_state
+from met_games.games.card.deck import Card
+from met_games.games.card.engine import market_state
 
 SUITS = "♠♥♦♣"
 DECK = [Card(rank, suit) for suit in SUITS for rank in range(2, 15)]

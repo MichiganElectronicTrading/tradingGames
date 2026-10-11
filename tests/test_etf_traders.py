@@ -7,10 +7,10 @@ from decimal import Decimal
 
 import pytest
 
-from mtt_games.games.etf.config import EASY, HARD, MEDIUM
-from mtt_games.games.etf.engine import RECAP, RESULT, SKIP, YOU, EtfGame, Round, ticks
-from mtt_games.games.etf.model import BUY, SELL, RoundPlan
-from mtt_games.games.etf.traders import Plan, trader_decision
+from met_games.games.etf.config import EASY, HARD, MEDIUM
+from met_games.games.etf.engine import RECAP, RESULT, SKIP, YOU, EtfGame, Round, ticks
+from met_games.games.etf.model import BUY, SELL, RoundPlan
+from met_games.games.etf.traders import Plan, trader_decision
 
 D = Decimal
 

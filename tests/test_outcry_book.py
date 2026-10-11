@@ -1,6 +1,6 @@
 """Outcry stage 2: the order book."""
 
-from mtt_games.games.outcry.book import BID, OFFER, Book
+from met_games.games.outcry.book import BID, OFFER, Book
 
 A, B, C, D = 0, 1, 2, 3
 

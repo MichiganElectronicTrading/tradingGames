@@ -3,10 +3,10 @@
 import pytest
 from rich.table import Table
 
-from mtt_games import storage
-from mtt_games.__main__ import build_app, parse_args
-from mtt_games.games.sumgame.screens.stats import ConfirmClearScreen, StatsScreen
-from mtt_games.widgets import KeyButton
+from met_games import storage
+from met_games.__main__ import build_app, parse_args
+from met_games.games.sumgame.screens.stats import ConfirmClearScreen, StatsScreen
+from met_games.widgets import KeyButton
 
 RECORD = {"mode": "EASY", "final_balance": 512, "edge_taken": 1.5, "reports_correct": 3, "reports_total": 4}
 SIZE = (150, 50)
@@ -14,7 +14,7 @@ SIZE = (150, 50)
 
 @pytest.fixture(autouse=True)
 def isolated_home(tmp_path, monkeypatch):
-    monkeypatch.setenv("MTT_GAMES_HOME", str(tmp_path))
+    monkeypatch.setenv("MET_GAMES_HOME", str(tmp_path))
 
 
 async def go_to_stats(pilot) -> None:

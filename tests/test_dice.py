@@ -7,10 +7,10 @@ from fractions import Fraction
 
 import pytest
 
-from mtt_games.games.dice.config import EASY, HARD, MEDIUM, PRESETS, DiceConfig
-from mtt_games.games.dice.engine import DICE, DiceRound, DiceSession, Die
-from mtt_games.games.sumgame.engine import BUY, SELL, Decision, make_quote, risk_limits, trade_pnl
-from mtt_games.games.sumgame.source import Market
+from met_games.games.dice.config import EASY, HARD, MEDIUM, PRESETS, DiceConfig
+from met_games.games.dice.engine import DICE, DiceRound, DiceSession, Die
+from met_games.games.sumgame.engine import BUY, SELL, Decision, make_quote, risk_limits, trade_pnl
+from met_games.games.sumgame.source import Market
 
 D = Decimal
 # Re-stated from the spec, independently of the engine's event table.

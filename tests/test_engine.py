@@ -1,8 +1,8 @@
 import pytest
 
-from mtt_games.games.card.config import EASY, HARD, MEDIUM, CardConfig
-from mtt_games.games.card.deck import Card
-from mtt_games.games.card.engine import (
+from met_games.games.card.config import EASY, HARD, MEDIUM, CardConfig
+from met_games.games.card.deck import Card
+from met_games.games.card.engine import (
     BROKE,
     BUY,
     OUT_OF_RISK,

@@ -5,10 +5,10 @@ from decimal import Decimal
 
 import pytest
 
-from mtt_games.games.etf.config import EASY, HARD
-from mtt_games.games.etf.engine import OPEN, RECAP, RESULT, TIMEOUT, YOU, EtfGame, Round, ticks
-from mtt_games.games.etf.model import BUY, SELL, SKIP, RoundPlan, bonus, gross, right_call
-from mtt_games.games.etf.traders import Trader
+from met_games.games.etf.config import EASY, HARD
+from met_games.games.etf.engine import OPEN, RECAP, RESULT, TIMEOUT, YOU, EtfGame, Round, ticks
+from met_games.games.etf.model import BUY, SELL, SKIP, RoundPlan, bonus, gross, right_call
+from met_games.games.etf.traders import Trader
 
 D = Decimal
 KESTREL, OSPREY, MERLIN = 1, 2, 3

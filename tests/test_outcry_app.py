@@ -5,16 +5,16 @@ import json
 import pytest
 from textual.widgets import Input, Static
 
-from mtt_games.__main__ import build_app, parse_args
-from mtt_games.app import MTTGamesApp
-from mtt_games.games.outcry.book import BID, OFFER
-from mtt_games.games.outcry.engine import YOU
-from mtt_games.games.outcry.screens.end import FinalScreen, ResultsScreen, TapeScreen
-from mtt_games.games.outcry.screens.rounds import CloseScreen, OpenScreen, TradingScreen
-from mtt_games.games.outcry.ui import CommandsScreen
-from mtt_games.games.sumgame.screens.custom import CustomScreen
-from mtt_games.games.sumgame.screens.howto import HowToScreen
-from mtt_games.games.sumgame.screens.lobby import LobbyScreen
+from met_games.__main__ import build_app, parse_args
+from met_games.app import METGamesApp
+from met_games.games.outcry.book import BID, OFFER
+from met_games.games.outcry.engine import YOU
+from met_games.games.outcry.screens.end import FinalScreen, ResultsScreen, TapeScreen
+from met_games.games.outcry.screens.rounds import CloseScreen, OpenScreen, TradingScreen
+from met_games.games.outcry.ui import CommandsScreen
+from met_games.games.sumgame.screens.custom import CustomScreen
+from met_games.games.sumgame.screens.howto import HowToScreen
+from met_games.games.sumgame.screens.lobby import LobbyScreen
 
 SIZE = (150, 50)
 KEYS = {" ": "space", "@": "at", "-": "minus"}
@@ -30,7 +30,7 @@ class FakeClock:
 
 @pytest.fixture(autouse=True)
 def isolated_home(tmp_path, monkeypatch):
-    monkeypatch.setenv("MTT_GAMES_HOME", str(tmp_path))
+    monkeypatch.setenv("MET_GAMES_HOME", str(tmp_path))
     monkeypatch.chdir(tmp_path)
     return tmp_path
 
@@ -174,10 +174,10 @@ async def test_report_timeout_is_wrong():
 
 
 async def test_home_lists_four_games_and_outcry_lobby():
-    app = MTTGamesApp()
+    app = METGamesApp()
     async with app.run_test(size=SIZE) as pilot:
         rows = [str(r) for r in app.screen.query_one("#game-list").rows]
-        assert [r.split()[0] for r in rows] == ["CARD", "DICE", "TRADING", "OUTCRY", "ETF"]
+        assert [r.split()[0] for r in rows] == ["CARD", "DICE", "TRADING", "OUTCRY", "ETF", "HI/LO"]
         await pilot.press("down", "down", "down", "enter")
         await pilot.pause()
         lobby = app.screen

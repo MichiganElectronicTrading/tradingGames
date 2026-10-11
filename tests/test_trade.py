@@ -7,10 +7,10 @@ from itertools import permutations
 import pytest
 from test_fair_value import brute_force  # Card's enumeration helper
 
-from mtt_games.games.card.deck import Card
-from mtt_games.games.sumgame.engine import BUY, PASS, SELL, TIMEOUT
-from mtt_games.games.trade.config import EASY, HARD, MEDIUM, PRESETS, TradeConfig
-from mtt_games.games.trade.engine import (
+from met_games.games.card.deck import Card
+from met_games.games.sumgame.engine import BUY, PASS, SELL, TIMEOUT
+from met_games.games.trade.config import EASY, HARD, MEDIUM, PRESETS, TradeConfig
+from met_games.games.trade.engine import (
     DELTA,
     GAMMA,
     PLAYERS,
@@ -27,7 +27,7 @@ from mtt_games.games.trade.engine import (
     peek_assignment,
     worst_loss,
 )
-from mtt_games.games.trade.stats import csv_rows, history_record, mistakes, session_stats
+from met_games.games.trade.stats import csv_rows, history_record, mistakes, session_stats
 
 C = Card
 
@@ -617,7 +617,7 @@ def test_bad_configs_rejected(changes, msg):
 
 def test_config_round_trip_and_type():
     assert TradeConfig.from_dict(HARD.to_dict()) == HARD
-    from mtt_games.games.card.config import EASY as CARD_EASY
+    from met_games.games.card.config import EASY as CARD_EASY
 
     with pytest.raises(TypeError):
         TradeSession(CARD_EASY)

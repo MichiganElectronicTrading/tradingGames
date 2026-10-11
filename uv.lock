@@ -68,7 +68,7 @@ wheels = [
 ]
 
 [[package]]
-name = "mtt-games"
+name = "met-games"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

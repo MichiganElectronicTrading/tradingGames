@@ -2,11 +2,11 @@
 
 from decimal import Decimal
 
-from mtt_games.games.etf.config import EASY
-from mtt_games.games.etf.engine import RESULT, YOU, EtfGame, Round, ticks
-from mtt_games.games.etf.model import BUY, SELL, Event, RoundPlan
-from mtt_games.games.etf.stats import leaderboard, mistakes, size_story, tiles
-from mtt_games.games.etf.traders import Trader
+from met_games.games.etf.config import EASY
+from met_games.games.etf.engine import RESULT, YOU, EtfGame, Round, ticks
+from met_games.games.etf.model import BUY, SELL, Event, RoundPlan
+from met_games.games.etf.stats import leaderboard, mistakes, size_story, tiles
+from met_games.games.etf.traders import Trader
 
 D = Decimal
 
