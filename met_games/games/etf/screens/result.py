@@ -14,7 +14,8 @@ from met_games.games.etf.engine import NAMES, RESULT, TICK, TIMEOUT, YOU
 from met_games.games.etf.model import BUY, SKIP, fmt_px
 from met_games.games.etf.screens.common import EtfScreen, basket_table, last_nav_title, signed_money, top_bar
 from met_games.games.etf.stats import missed_at_max, money, right_way, size_story
-from met_games.widgets import AMBER, DIM, GREEN, RED, TITLE, KeyBar, TitledPanel
+from met_games.pause import GameKeyBar
+from met_games.widgets import AMBER, DIM, GREEN, RED, TITLE, TitledPanel
 
 
 def signed_px(x, tick) -> str:
@@ -43,7 +44,7 @@ class ResultScreen(EtfScreen):
                     yield TitledPanel("YOUR TRADE", Static(self.trade_text()), double=True)
                     yield TitledPanel("RACE LOG", Static(self.race_log()))
         last = len(g.rounds) >= g.config.rounds
-        yield KeyBar([("⏎", "recap" if last else "next round")])
+        yield GameKeyBar([("⏎", "recap" if last else "next round")])
 
     DEFAULT_CSS = """
     ResultScreen #cols { height: auto; }

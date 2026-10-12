@@ -3,8 +3,6 @@ report, your trades, and the W walkthrough."""
 
 from __future__ import annotations
 
-from time import monotonic
-
 from rich import box
 from rich.table import Table
 from rich.text import Text
@@ -20,6 +18,7 @@ from met_games.games.sumgame.ui import ui_for
 from met_games.games.trade.engine import PLAYERS, TRADERS, YOU, Hand, TradeSession, Turn
 from met_games.games.trade.screens.common import CIRCLED, TradeScreen, header, next_screen
 from met_games.games.trade.stats import market_label
+from met_games.pause import GameKeyBar
 from met_games.widgets import AMBER, DIM, GREEN, RED, TITLE, KeyBar, TitledPanel, TopBar
 
 
@@ -166,13 +165,13 @@ class SettleScreen(TradeScreen):
             with Vertical(id="right"):
                 yield TitledPanel("YOUR TRADES", Static(id="trades"))
                 yield TitledPanel("WALKTHROUGH", Static(id="walk"), id="walk-panel")
-        yield KeyBar([("0-9 −", "type P&L"), ("⏎", "submit")])
+        yield GameKeyBar([("0-9 −", "type P&L"), ("⏎", "submit")])
 
     def on_mount(self) -> None:
         self.query_one("#walk-panel").display = False
         self.refresh_tables()
         self.query_one("#report-input", Input).focus()
-        self.started = monotonic()
+        self.started = self.clock()
 
     def refresh_tables(self) -> None:
         self.query_one("#board", Static).update(leaderboard(self.hand))
@@ -186,7 +185,7 @@ class SettleScreen(TradeScreen):
             self.notify("enter a whole number, e.g. -7", severity="warning")
             return
         hand = self.hand
-        correct = self.session.report(text, monotonic() - self.started)
+        correct = self.session.report(text, self.clock() - self.started)
         message.input.disabled = True
         self.set_focus(None)
         result = Text()

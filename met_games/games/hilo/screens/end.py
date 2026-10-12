@@ -59,6 +59,7 @@ class EndScreen(HiloScreen):
         Binding("b", "review", "review bets"),
         Binding("l", "lobby", "lobby"),
         Binding("q", "app.quit", "quit"),
+        Binding("escape", "lobby", "lobby", show=False, priority=True),
     ]
 
     DEFAULT_CSS = """

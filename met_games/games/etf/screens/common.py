@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from time import monotonic
+from typing import Any
 
 from rich import box
 from rich.table import Table
 from rich.text import Text
-from textual.screen import Screen
 
 from met_games.games.etf.engine import TICK, YOU, EtfGame
 from met_games.games.etf.model import REBAL, SPLIT, RoundPlan, fmt_px, fmt_weight, wxp
 from met_games.games.etf.stats import money
 from met_games.games.sumgame.ui import ui_for
+from met_games.pause import GameScreen
 from met_games.widgets import AMBER, DIM, GREEN, RED, TITLE, TopBar, big_lines
 
 EVENT_ROW = f"bold {AMBER}"
@@ -124,10 +124,12 @@ def signed_money(x: Decimal) -> Text:
     return Text(money(x), style=f"bold {GREEN if x > 0 else RED if x < 0 else ''}")
 
 
-class EtfScreen(Screen):
-    """Base: bridges real (or injected) time to the game's tick clock; moves on when the phase changes."""
+class EtfScreen(GameScreen):
+    """Base: bridges real (or injected: `app.etf_clock`) time to the game's tick clock; moves on when the phase
+    changes. Paused, that clock (and the race) stops."""
 
     PHASES: tuple[str, ...] = ()
+    CLOCK_ATTR = "etf_clock"
 
     DEFAULT_CSS = """
     EtfScreen #body { height: 1fr; }
@@ -145,10 +147,6 @@ class EtfScreen(Screen):
         self.t0 = 0.0
         self.tick0 = 0
 
-    def clock(self) -> float:
-        """Seconds from `app.etf_clock` if set (tests inject a fake), else monotonic."""
-        return getattr(self.app, "etf_clock", monotonic)()
-
     def on_mount(self) -> None:
         self.t0, self.tick0 = self.clock(), self.game.now
         self.refresh_view()
@@ -162,6 +160,9 @@ class EtfScreen(Screen):
             self.leave()
             return
         self.refresh_view()
+
+    def abandon_record(self) -> tuple[str, dict[str, Any]]:
+        return self.ui.history_file, {"mode": self.game.mode, "seed": self.game.seed}
 
     def leave(self) -> None:
         from met_games.games.etf.screens import screen_for

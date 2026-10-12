@@ -19,6 +19,7 @@ from met_games.games.outcry.engine import OPEN_KIND, REPORT, RESULTS, TICK, YOU
 from met_games.games.outcry.screens.common import OutcryScreen, big, clock_text, money, signed, top_bar
 from met_games.games.outcry.stats import BUY, csv_rows, grouped, history_record, totals, your_trades
 from met_games.games.sumgame.screens.common import start_session
+from met_games.pause import GameKeyBar
 from met_games.widgets import AMBER, DIM, GREEN, RED, TITLE, KeyBar, TitledPanel, TopBar
 
 
@@ -78,7 +79,7 @@ class FinalScreen(OutcryScreen):
                         "each trade: +1 if it made money at the settle (bought below / sold above), −1 if it lost, "
                         "0 if it was at the settle — whatever its size. Enter the net (negatives allowed).", style=DIM))
                 yield TitledPanel("TIMER", Static(id="timer", classes="timer"))
-        yield KeyBar([("0-9 -", "type score"), ("⏎", "submit")])
+        yield GameKeyBar([("0-9 -", "type score"), ("⏎", "submit")])
 
     def on_mount(self) -> None:
         super().on_mount()
@@ -157,6 +158,7 @@ class ResultsScreen(OutcryScreen):
         Binding("e", "export", "export CSV"),
         Binding("l", "lobby", "lobby"),
         Binding("q", "app.quit", "quit"),
+        Binding("escape", "lobby", "lobby", show=False, priority=True),
     ]
 
     DEFAULT_CSS = """

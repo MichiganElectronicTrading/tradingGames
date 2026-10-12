@@ -61,6 +61,11 @@ def read_jsonl(name: str) -> list[dict[str, Any]]:
     return records
 
 
+def read_history(name: str) -> list[dict[str, Any]]:
+    """A history file without its `"abandoned": true` lines (games left from the pause menu)."""
+    return [r for r in read_jsonl(name) if not r.get("abandoned")]
+
+
 def delete(name: str) -> None:
     """Remove a stored file (no-op if it doesn't exist)."""
     (base_dir() / name).unlink(missing_ok=True)

@@ -19,6 +19,7 @@ from met_games.games.etf.screens.common import (
     signed_money,
     top_bar,
 )
+from met_games.pause import GameKeyBar
 from met_games.widgets import AMBER, DIM, GREEN, RED, KeyBar, KeyButton, TitledPanel
 
 BLOCKS = 5
@@ -35,7 +36,6 @@ class RoundScreen(EtfScreen):
         Binding("shift+left", "units(-5)", show=False),
         Binding("shift+right", "units(5)", show=False),
         Binding("enter", "skip_ahead", "skip ahead"),
-        Binding("escape", "quit_game", "quit"),
     ]
 
     DEFAULT_CSS = """
@@ -74,8 +74,7 @@ class RoundScreen(EtfScreen):
                 yield TitledPanel("TIMER", Static(id="timer", classes="timer"))
                 yield TitledPanel("THE RACE · FIRST TRADE +20%", Static(id="race"))
                 yield TitledPanel("SESSION", Static(id="session"))
-        yield KeyBar([("B", "buy"), ("S", "sell"), ("K", "skip"), ("←→", "units ±1"), ("⇧←→", "±5"),
-                      ("Esc", "quit")])
+        yield GameKeyBar([("B", "buy"), ("S", "sell"), ("K", "skip"), ("←→", "units ±1"), ("⇧←→", "±5")])
 
     # ── view ────────────────────────────────────────────────────────────────
 
@@ -197,7 +196,7 @@ class RoundScreen(EtfScreen):
         if self.game.phase != OPEN:
             self.leave()
             return
-        self.query_one(KeyBar).set_keys([("⏎", "skip ahead"), ("Esc", "quit")])
+        self.query_one(KeyBar).set_keys([("⏎", "skip ahead")])
         self.refresh_view()
 
     def action_skip_ahead(self) -> None:
@@ -207,9 +206,4 @@ class RoundScreen(EtfScreen):
             return
         g.advance_to(g.round.start + ticks(g.config.timer_s))
         self.leave()
-
-    def action_quit_game(self) -> None:
-        self.leaving = True
-        self.ticker.stop()
-        self.app.pop_screen()
 

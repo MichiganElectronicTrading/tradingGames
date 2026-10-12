@@ -36,6 +36,7 @@ def modes_table(ui: GameUI, selected: str | None) -> Table:
 
 
 class LobbyScreen(Screen):
+    GAME_LOBBY = True  # the pause menu's "leave to lobby" stops here
     BINDINGS = [
         Binding("c", "custom", "custom"),
         Binding("h", "howto", "how to play"),

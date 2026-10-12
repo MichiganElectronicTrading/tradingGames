@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from typing import Any
 
 from rich import box
 from rich.table import Table
@@ -18,6 +19,7 @@ from met_games.games.sumgame.stats import money
 from met_games.games.sumgame.ui import ui_for
 from met_games.games.trade.engine import TRADERS, TURNS, YOU, Action, Hand, TradeSession, Turn
 from met_games.games.trade.stats import standings
+from met_games.pause import GameScreen
 from met_games.widgets import AMBER, DIM, GREEN, RED, SELECTED, TITLE, TitledPanel, TopBar, big_lines
 
 CIRCLED = "①②③④"
@@ -25,8 +27,15 @@ CURRENT_ROW = f"bold {AMBER} on #2A3340"
 BAR_WIDTH = 26
 
 
-class TradeScreen(Screen):
-    """Base for the hand screens: shared layout rules."""
+class TradeScreen(GameScreen):
+    """Base for the hand screens: shared layout rules, the pause menu and its clock."""
+
+    CLOCK_ATTR = "trade_clock"
+
+    session: TradeSession
+
+    def abandon_record(self) -> tuple[str, dict[str, Any]]:
+        return ui_for(self.session.config).history_file, {"mode": self.session.mode, "seed": self.session.seed}
 
     DEFAULT_CSS = """
     TradeScreen #body { height: 1fr; }

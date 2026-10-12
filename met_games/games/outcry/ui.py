@@ -87,7 +87,7 @@ def commands_section() -> tuple[str, list[str]]:
         "b 464 — bid 464 · o 467 — offer 467 · 464 @ 467 — bid and offer at once",
         "buy — lift the best offer · sell — hit the best bid (an error if there's none)",
         "x — cancel all · xb — cancel your bid · xo — cancel your offer",
-        "↑ recalls your last command · Ctrl+B / Ctrl+S = buy / sell · Esc cancels all",
+        "↑ recalls your last command · Ctrl+B / Ctrl+S = buy / sell · Ctrl+X cancels all · Esc opens the pause menu",
         "A new bid or offer replaces your old one on that side. Bad input shows an error and is never sent; "
         "every command echoes a ✓ or ✗ line.",
         f"cheat sheet: {CHEAT_SHEET}",

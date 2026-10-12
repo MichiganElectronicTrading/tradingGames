@@ -3,8 +3,6 @@ market that you act on first (TakeScreen)."""
 
 from __future__ import annotations
 
-from time import monotonic
-
 from rich import box
 from rich.table import Table
 from rich.text import Text
@@ -30,6 +28,7 @@ from met_games.games.trade.screens.common import (
     table_panel,
     traders_text,
 )
+from met_games.pause import GameKeyBar
 from met_games.widgets import AMBER, DIM, GREEN, RED, TITLE, KeyBar, KeyButton, TitledPanel
 
 FEED_STEP = 0.6  # seconds per line of the fills feed
@@ -90,14 +89,14 @@ class MakeScreen(TradeScreen):
                 yield TitledPanel("TIMER", Static(id="timer"))
                 yield TitledPanel("TABLE", Static(traders_text(self.hand, self.cfg.peeks)))
                 yield TitledPanel("STANDINGS", Static(standings_table(self.session)))
-        yield KeyBar([("0-9 −", "type"), ("Tab", "next field"), ("⏎", "show market")])
+        yield GameKeyBar([("0-9 −", "type"), ("Tab", "next field"), ("⏎", "show market")])
 
     def on_mount(self) -> None:
         size = self.query_one("#in-size", Input)
         size.value = str(self.cfg.FIXED_SIZE)
         size.disabled = self.cfg.sizing == "fixed"
         self.query_one("#in-bid", Input).focus()
-        self.started = monotonic()
+        self.started = self.clock()
         self.refresh_quote()
         self.refresh_clock(0.0)
         self.ticker = self.set_interval(0.1, self.tick)
@@ -107,7 +106,7 @@ class MakeScreen(TradeScreen):
     def tick(self) -> None:
         if self.done:
             return
-        t = monotonic() - self.started
+        t = self.clock() - self.started
         if t >= self.cfg.quote_timer_s:
             self.session.no_quote()
             self.finish()
@@ -249,7 +248,7 @@ class FillsScreen(TradeScreen):
                 nxt = Text(next_label(self.hand), style=f"bold {AMBER}")
                 nxt.append("\n⏎ continue", style=DIM)
                 yield TitledPanel("NEXT", Static(nxt))
-        yield KeyBar([("⏎", "skip")])
+        yield GameKeyBar([("⏎", "skip")])
 
     def on_mount(self) -> None:
         if self.rows:
@@ -264,6 +263,10 @@ class FillsScreen(TradeScreen):
         out.append(f"{t.bid} @ {t.ask}", style=f"bold {AMBER}")
         out.append(f" · size {t.size} per side · width {t.width}", style=DIM)
         return out
+
+    def on_pause(self, paused: bool) -> None:
+        if self.ticker is not None and not self.complete:  # the traders' feed waits for you
+            self.ticker.pause() if paused else self.ticker.resume()
 
     def step(self) -> None:
         self.shown += 1
@@ -375,10 +378,10 @@ class TakeScreen(TradeScreen):
                     yield Static("you act first · others trade after you", id="order-note", classes="dim")
                 yield TitledPanel("TIMER", Static(id="timer"))
                 yield TitledPanel("YOUR POSITION", Static(id="position"))
-        yield KeyBar([("B", "buy @ ask"), ("S", "sell @ bid"), ("P", "pass"), ("←→", "size ±1")])
+        yield GameKeyBar([("B", "buy @ ask"), ("S", "sell @ bid"), ("P", "pass"), ("←→", "size ±1")])
 
     def on_mount(self) -> None:
-        self.started = monotonic()
+        self.started = self.clock()
         self.refresh_state()
         self.refresh_clock(0.0)
         self.ticker = self.set_interval(0.1, self.tick)
@@ -388,7 +391,7 @@ class TakeScreen(TradeScreen):
     def tick(self) -> None:
         if self.acted:
             return
-        t = monotonic() - self.started
+        t = self.clock() - self.started
         if t >= self.cfg.take_timer_s:
             self.session.timeout()
             self.after_act()
@@ -435,7 +438,7 @@ class TakeScreen(TradeScreen):
     def action_act(self, action: str) -> None:
         if self.acted:
             return
-        if monotonic() - self.started >= self.cfg.take_timer_s:
+        if self.clock() - self.started >= self.cfg.take_timer_s:
             self.tick()
             return
         max_buy, max_sell, buy_n, sell_n = self.sizes()

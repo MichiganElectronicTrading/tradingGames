@@ -27,6 +27,7 @@ DECK_NOTES = {INTERVIEW: "13 cards · 12 bets", FULL: "52 cards · 51 bets", RED
 
 
 class HiloLobby(Screen):
+    GAME_LOBBY = True  # the pause menu's "leave to lobby" stops here
     BINDINGS = [
         Binding("d", "cycle_deck", "deck"),
         Binding("c", "custom", "custom"),

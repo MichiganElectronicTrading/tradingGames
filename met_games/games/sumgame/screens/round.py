@@ -3,20 +3,27 @@
 from __future__ import annotations
 
 import math
-from time import monotonic
 from typing import Any
 
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
-from textual.screen import Screen
 from textual.widgets import Static
 
 from met_games.games.sumgame.engine import BUY, PASS, SELL, SumSession
-from met_games.games.sumgame.screens.common import crumb, event_banner, item_widget, log_text, round_text, top_bar
+from met_games.games.sumgame.screens.common import (
+    SumScreen,
+    crumb,
+    event_banner,
+    item_widget,
+    log_text,
+    round_text,
+    top_bar,
+)
 from met_games.games.sumgame.ui import ui_for
-from met_games.widgets import AMBER, BIG_ROWS, DIM, GREEN, RED, KeyBar, KeyButton, TitledPanel, big_lines
+from met_games.pause import GameKeyBar
+from met_games.widgets import AMBER, BIG_ROWS, DIM, GREEN, RED, KeyButton, TitledPanel, big_lines
 
 BAR_WIDTH = 26
 
@@ -42,7 +49,7 @@ def market_title(session: SumSession) -> str:
     return "MARKET" if tick == 1 else f"MARKET · TICK {session.source.price(tick)}"
 
 
-class RoundScreen(Screen):
+class RoundScreen(SumScreen):
     BINDINGS = [
         Binding("b", "buy", "buy"),
         Binding("s", "sell", "sell"),
@@ -106,10 +113,10 @@ class RoundScreen(Screen):
         keys = [("B", "buy @ ask"), ("S", "sell @ bid"), ("P", "pass")]
         if s.config.sizing == "choose":
             keys += [("←→", "size ±1"), ("shift+←→", "±5")]
-        yield KeyBar(keys)
+        yield GameKeyBar(keys)
 
     def on_mount(self) -> None:
-        self.started = monotonic()
+        self.started = self.clock()
         self.refresh_market()
         self.refresh_clock(0.0)
         self.ticker = self.set_interval(0.1, self.tick)
@@ -117,7 +124,7 @@ class RoundScreen(Screen):
     # ── clock ───────────────────────────────────────────────────────────────
 
     def elapsed(self) -> float:
-        return monotonic() - self.started
+        return self.clock() - self.started
 
     def tick(self) -> None:
         if self.done:

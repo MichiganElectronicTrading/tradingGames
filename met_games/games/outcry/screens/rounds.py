@@ -27,7 +27,8 @@ from met_games.games.outcry.screens.common import (
 )
 from met_games.games.outcry.traders import BUY, PASS, SELL
 from met_games.games.sumgame.screens.round import quote_text
-from met_games.widgets import AMBER, DIM, GREEN, RED, TITLE, KeyBar, KeyButton, TitledPanel
+from met_games.pause import GameKeyBar
+from met_games.widgets import AMBER, DIM, GREEN, RED, TITLE, KeyButton, TitledPanel
 
 HISTORY_LINES = 4
 BOOK_LEVELS = 6
@@ -102,7 +103,7 @@ class OpenScreen(OutcryScreen):
                 yield TitledPanel("WHAT YOU KNOW", Static(id="know"))
         keys = [("B", "buy @ ask"), ("S", "sell @ bid"), ("P", "pass")] if g.phase == RESPOND else [
             ("0-9", "type"), ("Tab", "next field"), ("⏎", "open")]
-        yield KeyBar(keys)
+        yield GameKeyBar(keys)
 
     def on_mount(self) -> None:
         super().on_mount()
@@ -259,7 +260,7 @@ class TradingScreen(OutcryScreen):
         Binding("up", "recall", "recall", priority=True),
         Binding("ctrl+b", "quick('buy')", "buy", priority=True),
         Binding("ctrl+s", "quick('sell')", "sell", priority=True),
-        Binding("escape", "quick('x')", "cancel all", priority=True),
+        Binding("ctrl+x", "quick('x')", "cancel all", priority=True),
     ]
 
     DEFAULT_CSS = """
@@ -291,7 +292,7 @@ class TradingScreen(OutcryScreen):
             yield Static(id="history")
             yield Input(id="cmd", placeholder="b 464 · o 467 · 464 @ 467 · buy · sell · x")
             yield Static(CHEAT_SHEET, classes="dim")
-        yield KeyBar([("⏎", "send"), ("↑", "recall"), ("^B", "buy"), ("^S", "sell"), ("Esc", "cancel all")])
+        yield GameKeyBar([("⏎", "send"), ("↑", "recall"), ("^B", "buy"), ("^S", "sell"), ("^X", "cancel all")])
 
     def on_mount(self) -> None:
         super().on_mount()
@@ -392,7 +393,7 @@ class CloseScreen(OutcryScreen):
             with Vertical(id="right"):
                 yield TitledPanel("WHAT YOU KNOW", Static(know_text(g)))
                 yield TitledPanel("NEXT", Static(self.next_text()))
-        yield KeyBar([("⏎", "next round" if len(g.rounds) < g.config.rounds else "final reveal")])
+        yield GameKeyBar([("⏎", "next round" if len(g.rounds) < g.config.rounds else "final reveal")])
 
     def next_text(self) -> Text:
         g = self.game

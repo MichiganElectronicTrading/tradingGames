@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from rich.text import Text
 from textual.app import App
 from textual.screen import Screen
@@ -12,7 +14,19 @@ from met_games.games.sumgame.engine import Round, SumSession
 from met_games.games.sumgame.source import Source
 from met_games.games.sumgame.stats import money, trade_label
 from met_games.games.sumgame.ui import GameUI, ui_for
+from met_games.pause import GameScreen
 from met_games.widgets import DIM, GREEN, RED, TopBar
+
+
+class SumScreen(GameScreen):
+    """Base for the in-game sum-game screens (round, reveal): the pause menu and its clock."""
+
+    CLOCK_ATTR = "sum_clock"
+
+    session: SumSession
+
+    def abandon_record(self) -> tuple[str, dict[str, Any]]:
+        return ui_for(self.session).history_file, {"mode": self.session.mode, "seed": self.session.seed}
 
 
 def crumb(session: SumSession) -> str:

@@ -12,6 +12,11 @@ ModalScreen {
     align: center middle;
 }
 
+/* the pause menu is opaque: the board behind it stays hidden */
+PauseMenu {
+    background: #0B0F14;
+}
+
 TopBar {
     dock: top;
     height: 1;

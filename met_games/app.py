@@ -8,6 +8,7 @@ from functools import partial
 
 from rich.text import Text
 from textual.app import App, ComposeResult
+from textual.binding import Binding
 from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Static
@@ -17,6 +18,7 @@ from met_games.games.dice.ui import DICE_UI
 from met_games.games.etf.ui import ETF_UI
 from met_games.games.hilo.screens.lobby import HiloLobby
 from met_games.games.hilo.ui import HILO_UI
+from met_games.games.math.screens.lobby import MathLobby
 from met_games.games.outcry.ui import OUTCRY_UI
 from met_games.games.sumgame.screens.lobby import LobbyScreen as SumLobby
 from met_games.games.trade.ui import TRADE_UI
@@ -39,6 +41,7 @@ GAMES: list[GameInfo] = [
     GameInfo("outcry", "OUTCRY", "8-Player Open Outcry", partial(SumLobby, OUTCRY_UI)),
     GameInfo("etf", "ETF ARB", "Basket Arbitrage Race", partial(SumLobby, ETF_UI)),
     GameInfo("hilo", "HI/LO", "Kelly Sizing Speed Run", partial(HiloLobby, HILO_UI)),
+    GameInfo("math", "MATH", "Mental Math Sprints", MathLobby),
 ]
 
 
@@ -71,10 +74,15 @@ class METGamesApp(App):
     CSS_PATH = "theme.tcss"
     TITLE = "MET Games"
     ENABLE_COMMAND_PALETTE = False
+    # Ctrl+C quits from anywhere (Textual would otherwise make it "copy" inside text inputs)
+    BINDINGS = [Binding("ctrl+c", "quit", "quit", show=False, priority=True)]
 
-    def __init__(self, seed: int | None = None, game: str | None = None, deck: str | None = None) -> None:
+    def __init__(self, seed: int | None = None, game: str | None = None, deck: str | None = None,
+                 math_mode: str | None = None, math_difficulty: str | None = None, math_daily: bool = False) -> None:
         super().__init__()
         self.deck_override = deck  # `--deck`: the deck a game with a deck picker (hilo) starts on
+        # math only: `--mode` starts that run, `--difficulty` preselects it, `--daily` opens the daily
+        self.math_mode, self.math_difficulty, self.math_daily = math_mode, math_difficulty, math_daily
         # When set, every session without its own seed uses this one (`--seed`, club play, tests).
         self.seed_override = seed
         self.start_game = game  # registry key of a game whose lobby opens on launch

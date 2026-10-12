@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from time import monotonic
+from typing import Any
 
 from rich.table import Table
 from rich.text import Text
@@ -11,6 +11,7 @@ from textual.screen import Screen
 from met_games.games.outcry.engine import TICK, YOU, OutcryGame
 from met_games.games.outcry.model import HIGHEST, LOWEST
 from met_games.games.sumgame.ui import ui_for
+from met_games.pause import GameScreen
 from met_games.widgets import AMBER, DIM, GREEN, RED, TopBar, big_lines
 
 
@@ -151,11 +152,12 @@ def big(text: str, style: str) -> Text:
     return out
 
 
-class OutcryScreen(Screen):
-    """Base: bridges real (or injected) time to the game's tick clock, and moves to the next screen when
-    the game's phase leaves the ones this screen shows."""
+class OutcryScreen(GameScreen):
+    """Base: bridges real (or injected: `app.outcry_clock`) time to the game's tick clock, and moves to the next
+    screen when the game's phase leaves the ones this screen shows. Paused, that clock (and every trader) stops."""
 
     PHASES: tuple[str, ...] = ()
+    CLOCK_ATTR = "outcry_clock"
 
     DEFAULT_CSS = """
     OutcryScreen #body { height: 1fr; }
@@ -172,10 +174,6 @@ class OutcryScreen(Screen):
         self.t0 = 0.0
         self.tick0 = 0
 
-    def clock(self) -> float:
-        """Seconds from the app's clock: `app.outcry_clock` if set (tests inject a fake), else monotonic."""
-        return getattr(self.app, "outcry_clock", monotonic)()
-
     def on_mount(self) -> None:
         self.t0, self.tick0 = self.clock(), self.game.now
         self.refresh_view()
@@ -189,6 +187,9 @@ class OutcryScreen(Screen):
             self.leave()
             return
         self.refresh_view()
+
+    def abandon_record(self) -> tuple[str, dict[str, Any]]:
+        return self.ui.history_file, {"mode": self.game.mode, "seed": self.game.seed}
 
     def leave(self) -> None:
         from met_games.games.outcry.screens import screen_for

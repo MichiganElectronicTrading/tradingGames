@@ -105,7 +105,7 @@ async def test_full_easy_game_with_the_fake_clock(isolated_home):
                     assert game.book.order_of(YOU, BID).price == 11
                     assert (await send(pilot, "o 9999")).endswith("✓ offer 9999 posted")
                     assert (await send(pilot, "xb")).endswith("✓ cancelled your bid")
-                    await pilot.press("escape")  # Esc cancels all
+                    await pilot.press("ctrl+x")  # Ctrl+X cancels all
                     await pilot.pause()
                     assert game.book.order_of(YOU, OFFER) is None
                     line = await send(pilot, "o banana")
@@ -177,7 +177,7 @@ async def test_home_lists_four_games_and_outcry_lobby():
     app = METGamesApp()
     async with app.run_test(size=SIZE) as pilot:
         rows = [str(r) for r in app.screen.query_one("#game-list").rows]
-        assert [r.split()[0] for r in rows] == ["CARD", "DICE", "TRADING", "OUTCRY", "ETF", "HI/LO"]
+        assert [r.split()[0] for r in rows] == ["CARD", "DICE", "TRADING", "OUTCRY", "ETF", "HI/LO", "MATH"]
         await pilot.press("down", "down", "down", "enter")
         await pilot.pause()
         lobby = app.screen

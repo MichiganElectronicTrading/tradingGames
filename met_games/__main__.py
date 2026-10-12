@@ -15,6 +15,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         prog="met-games",
         description="MET Games — solo trading drills in your terminal. Run with no arguments to open the game list.",
         epilog="example: met-games card --seed 42   (everyone on the same seed sees the same deals and quotes)",
+        # keep the help column where it was before the longer math flags; those wrap onto their own line
+        formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=16),
     )
     parser.add_argument(
         "game", nargs="?", choices=[g.key for g in GAMES], metavar="GAME",
@@ -28,11 +30,24 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--deck", choices=["interview", "full", "redblack"], metavar="DECK",
         help="hilo only: the deck to start on — interview, full or redblack (default: the difficulty's deck)",
     )
-    return parser.parse_args(argv)
+    parser.add_argument(
+        "--mode", choices=["sprint", "survival", "zetamac", "optiver"], metavar="MODE",
+        help="math only: start this mode straight away — sprint, survival, zetamac or optiver",
+    )
+    parser.add_argument(
+        "--difficulty", choices=["easy", "medium", "hard"], metavar="LEVEL",
+        help="math only: the difficulty for sprint and survival — easy, medium or hard (default: medium)",
+    )
+    parser.add_argument("--daily", action="store_true", help="math only: open today's daily challenge")
+    args = parser.parse_args(argv)
+    if args.daily and args.game is None:
+        args.game = "math"
+    return args
 
 
 def build_app(args: argparse.Namespace) -> METGamesApp:
-    return METGamesApp(seed=args.seed, game=args.game, deck=args.deck)
+    return METGamesApp(seed=args.seed, game=args.game, deck=args.deck, math_mode=getattr(args, "mode", None),
+                       math_difficulty=getattr(args, "difficulty", None), math_daily=getattr(args, "daily", False))
 
 
 def notice(line: str) -> None:

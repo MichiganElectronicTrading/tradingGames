@@ -211,7 +211,7 @@ async def test_home_lists_six_games_and_the_lobby_deck_picker():
     app = METGamesApp()
     async with app.run_test(size=SIZE) as pilot:
         rows = [str(r) for r in app.screen.query_one("#game-list").rows]
-        assert [r.split()[0] for r in rows] == ["CARD", "DICE", "TRADING", "OUTCRY", "ETF", "HI/LO"]
+        assert [r.split()[0] for r in rows] == ["CARD", "DICE", "TRADING", "OUTCRY", "ETF", "HI/LO", "MATH"]
         await pilot.press("down", "down", "down", "down", "down", "enter")
         await pilot.pause()
         lobby = app.screen

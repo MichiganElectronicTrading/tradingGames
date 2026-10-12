@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-from time import monotonic
+from typing import Any
 
 from rich.table import Table
 from rich.text import Text
-from textual.screen import Screen
 
 from met_games.games.hilo.engine import TICK, HiloGame
 from met_games.games.hilo.model import Card
+from met_games.games.hilo.scores import HISTORY_FILE
 from met_games.games.sumgame.ui import ui_for
+from met_games.pause import GameScreen
 from met_games.widgets import DIM, RED, TEXT, TopBar, big_lines
 
 
@@ -63,10 +64,12 @@ def big(text: str, style: str) -> Text:
     return out
 
 
-class HiloScreen(Screen):
-    """Base: bridges real (or injected) time to the game's tick clock; moves on when the phase changes."""
+class HiloScreen(GameScreen):
+    """Base: bridges real (or injected: `app.hilo_clock`) time to the game's tick clock; moves on when the phase
+    changes. Paused, that clock stops."""
 
     PHASES: tuple[str, ...] = ()
+    CLOCK_ATTR = "hilo_clock"
 
     def __init__(self, game: HiloGame) -> None:
         super().__init__()
@@ -75,10 +78,6 @@ class HiloScreen(Screen):
         self.leaving = False
         self.t0 = 0.0
         self.tick0 = 0
-
-    def clock(self) -> float:
-        """Seconds from `app.hilo_clock` if set (tests inject a fake), else monotonic."""
-        return getattr(self.app, "hilo_clock", monotonic)()
 
     def on_mount(self) -> None:
         self.t0, self.tick0 = self.clock(), self.game.now
@@ -96,6 +95,10 @@ class HiloScreen(Screen):
             self.leave()
             return
         self.refresh_view()
+
+    def abandon_record(self) -> tuple[str, dict[str, Any]]:
+        g = self.game
+        return HISTORY_FILE, {"mode": g.mode, "seed": g.seed, "deck": g.config.deck}
 
     def leave(self) -> None:
         from met_games.games.hilo.screens import screen_for

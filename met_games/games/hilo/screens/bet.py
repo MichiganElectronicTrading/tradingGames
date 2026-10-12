@@ -27,7 +27,8 @@ from met_games.games.hilo.model import (
 )
 from met_games.games.hilo.scores import multipliers
 from met_games.games.hilo.screens.common import HiloScreen, HiloTopBar, big, card_art, top_bar
-from met_games.widgets import AMBER, DIM, GREEN, RED as RED_COLOR, SELECTED, TITLE, KeyBar, TitledPanel
+from met_games.pause import GameKeyBar
+from met_games.widgets import AMBER, DIM, GREEN, RED as RED_COLOR, SELECTED, TITLE, TitledPanel
 
 FLASH_S = 0.6
 BAR = 30
@@ -109,7 +110,7 @@ class BetScreen(HiloScreen):
                 yield TitledPanel("LAST BETS", Static(id="last"))
         up, down = self.game.sides
         keys = f"{up[0]}/{down[0]} ↑↓"
-        yield KeyBar([(keys, "side"), ("←→", "±5%"), ("⇧←→ / [ ]", "±25%"), ("0–9 · A", "all-in"), ("⏎", "lock")])
+        yield GameKeyBar([(keys, "side"), ("←→", "±5%"), ("⇧←→ / [ ]", "±25%"), ("0–9 · A", "all-in"), ("⏎", "lock")])
 
     # ── clock + flash ───────────────────────────────────────────────────────
 

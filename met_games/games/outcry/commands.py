@@ -14,7 +14,7 @@ BID_CMD, OFFER_CMD, BOTH, LIFT, HIT, CANCEL_ALL, CANCEL_BID, CANCEL_OFFER = (
     "bid", "offer", "both", "buy", "sell", "x", "xb", "xo",
 )
 MAX_PRICE = 9999
-CHEAT_SHEET = "b 464 bid · o 467 offer · 464 @ 467 both · buy · sell · x cancel all · xb / xo · ↑ recall · ^B ^S · Esc"
+CHEAT_SHEET = "b 464 bid · o 467 offer · 464 @ 467 both · buy · sell · x cancel all · xb / xo · ↑ recall · ^B ^S · ^X cancel all"
 _SIMPLE = {"buy": LIFT, "sell": HIT, "x": CANCEL_ALL, "xb": CANCEL_BID, "xo": CANCEL_OFFER}
 _ONE_SIDE = re.compile(r"^([bo])\s*(\S+)$")
 _TWO_SIDES = re.compile(r"^(\S+)\s*@\s*(\S+)$")

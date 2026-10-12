@@ -84,6 +84,7 @@ class RecapScreen(Screen):
         Binding("e", "export", "export CSV"),
         Binding("l", "lobby", "lobby"),
         Binding("q", "app.quit", "quit"),
+        Binding("escape", "lobby", "lobby", show=False),
     ]
 
     DEFAULT_CSS = """

@@ -2,17 +2,15 @@
 
 from __future__ import annotations
 
-from time import monotonic
-
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
-from textual.screen import Screen
 from textual.widgets import Input, Static
 
 from met_games.games.sumgame.engine import BUY, PASS, SELL, Round, SumSession, to_cents
 from met_games.games.sumgame.screens.common import (
+    SumScreen,
     crumb,
     event_banner,
     item_widget,
@@ -22,6 +20,7 @@ from met_games.games.sumgame.screens.common import (
 )
 from met_games.games.sumgame.stats import money
 from met_games.games.sumgame.ui import ui_for
+from met_games.pause import GameKeyBar
 from met_games.widgets import AMBER, DIM, GREEN, RED, KeyBar, TitledPanel, TopBar, fmt_balance
 
 
@@ -96,7 +95,7 @@ def explain_text(rnd: Round) -> Text:
     return out
 
 
-class RevealScreen(Screen):
+class RevealScreen(SumScreen):
     BINDINGS = [
         Binding("enter", "next", "next round"),
         Binding("w", "explain", "explain fair"),
@@ -152,13 +151,13 @@ class RevealScreen(Screen):
             with Vertical(id="reveal-right"):
                 yield TitledPanel("BREAKDOWN", Static(id="breakdown"), id="breakdown-panel")
                 yield TitledPanel("FAIR VALUE", Static(id="explain"), id="explain-panel")
-        yield KeyBar([("0-9 -" if self.whole_dollars else "0-9 . -", "type P&L"), ("⏎", "submit")])
+        yield GameKeyBar([("0-9 -" if self.whole_dollars else "0-9 . -", "type P&L"), ("⏎", "submit")])
 
     def on_mount(self) -> None:
         self.query_one("#breakdown-panel").display = False
         self.query_one("#explain-panel").display = False
         self.query_one("#report-input", Input).focus()
-        self.started = monotonic()
+        self.started = self.clock()
 
     def on_input_submitted(self, message: Input.Submitted) -> None:
         text = message.value.strip()
@@ -172,7 +171,7 @@ class RevealScreen(Screen):
             self.notify(f"enter a number, e.g. {example}", severity="warning")
             return
         r, price = self.rnd, self.src.price
-        correct = self.session.report(text, monotonic() - self.started)
+        correct = self.session.report(text, self.clock() - self.started)
         message.input.disabled = True
         self.set_focus(None)
 

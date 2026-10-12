@@ -18,7 +18,7 @@ from met_games.widgets import DIM, TITLE, KeyBar, KeyButton, TitledPanel, TopBar
 
 
 def stats_table(ui: GameUI) -> Table | Text:
-    rows = mode_stats(storage.read_jsonl(ui.history_file))
+    rows = mode_stats(storage.read_history(ui.history_file))
     if not rows:
         return Text("no sessions yet — play one from the lobby", style=DIM)
     t = Table(box=box.SIMPLE_HEAD, header_style=f"bold {TITLE}", border_style=DIM, expand=True, pad_edge=False)

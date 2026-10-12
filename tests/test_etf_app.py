@@ -124,7 +124,7 @@ async def test_home_lists_all_five_games_and_etf_lobby():
     app = METGamesApp()
     async with app.run_test(size=SIZE) as pilot:
         rows = [str(r) for r in app.screen.query_one("#game-list").rows]
-        assert [r.split()[0] for r in rows] == ["CARD", "DICE", "TRADING", "OUTCRY", "ETF", "HI/LO"]
+        assert [r.split()[0] for r in rows] == ["CARD", "DICE", "TRADING", "OUTCRY", "ETF", "HI/LO", "MATH"]
         await pilot.press("down", "down", "down", "down", "enter")
         await pilot.pause()
         lobby = app.screen
@@ -142,14 +142,14 @@ async def test_home_lists_all_five_games_and_etf_lobby():
             await pilot.pause()
 
 
-async def test_escape_quits_to_the_lobby():
+async def test_escape_menu_leaves_to_the_lobby():
     app = build_app(parse_args(["etf", "--seed", "3"]))
     app.etf_clock = FakeClock()
     async with app.run_test(size=SIZE) as pilot:
         await pilot.press("enter")
         await pilot.pause()
         assert isinstance(app.screen, RoundScreen)
-        await pilot.press("escape")
+        await pilot.press("escape", "l", "y")  # Esc opens the pause menu; L → Y leaves
         await pilot.pause()
         assert isinstance(app.screen, LobbyScreen)
 
