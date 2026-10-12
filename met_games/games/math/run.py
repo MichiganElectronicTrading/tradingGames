@@ -18,7 +18,7 @@ from met_games.games.math.problems import ALLOWED, Problem, ProblemStream, Zetam
 CORRECT, SKIPPED, WRONG = "correct", "skipped", "wrong"
 COMBO_STEP, COMBO_CAP = Fraction(1, 10), Fraction(3)
 SURVIVAL_START_MS = 30_000
-SURVIVAL_STEP_MS, SURVIVAL_EVERY = 500, 10
+SURVIVAL_STEP_MS, SURVIVAL_EVERY = 500, 5
 SKIP_PENALTY_MS = 5_000
 ZETAMAC_MS = 120_000
 OPTIVER_MS = 480_000
@@ -37,7 +37,7 @@ def points(base: int, streak_before: int) -> int:
 
 
 def survival_bonus_ms(correct_before: int, start_ms: int, floor_ms: int) -> int:
-    """`start_ms` per correct; every 10 correct the bonus drops 0.5s, never below `floor_ms`."""
+    """`start_ms` per correct; every 5 correct the bonus drops 0.5s, never below `floor_ms`."""
     return max(floor_ms, start_ms - SURVIVAL_STEP_MS * (correct_before // SURVIVAL_EVERY))
 
 

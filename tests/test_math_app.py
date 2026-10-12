@@ -110,7 +110,7 @@ async def test_survival_to_game_over():
         assert isinstance(screen, RunScreen) and screen.run.mode == SURVIVAL
         await answer(pilot, clock, 1)
         assert screen.run.time_left_ms == 37_000  # MEDIUM: +8s
-        assert "+8s per correct" in text_of(screen, "#clock") and "floor +4s" in text_of(screen, "#clock")
+        assert "+8s per correct" in text_of(screen, "#clock") and "−0.5s in 4" in text_of(screen, "#clock")
         clock.t += 1
         await pilot.press("tab")
         await pilot.pause()
@@ -278,20 +278,20 @@ async def test_cli_mode_and_difficulty_start_the_run():
         assert load_bests() == {"zetamac/standard": {"raw": 1, "raw_date": load_runs()[-1]["date"]}}
 
 
-async def test_custom_survival_edits_bonus_and_floor():
+async def test_custom_survival_edits_the_bonus():
     app, clock = make_app("math")
     async with app.run_test(size=SIZE) as pilot:
         await pilot.pause()
         await pilot.press("right", "right", "right", "down", "enter")  # CUSTOM · SURVIVAL
         await pilot.pause()
         custom = app.screen
-        assert isinstance(custom, MathCustomScreen) and custom.rows[:2] == ["bonus", "floor"]
-        assert (custom.bonus_ms, custom.floor_ms) == (8_000, 4_000)
+        assert isinstance(custom, MathCustomScreen) and custom.rows[0] == "bonus" and "floor" not in custom.rows
+        assert custom.bonus_ms == 8_000
         assert "bonus per correct" in text_of(custom, "#custom") and "+8s" in text_of(custom, "#custom")
-        await pilot.press("right", "down", "left")  # bonus +9s, floor +3.5s
+        await pilot.press("right")  # bonus +9s
         await pilot.press("enter")
         await pilot.pause()
         run = app.screen.run
-        assert run.survival and (run.bonus_ms, run.bonus_floor_ms) == (9_000, 3_500)
+        assert run.survival and (run.bonus_ms, run.bonus_floor_ms) == (9_000, 1_000)
         await answer(pilot, clock, 1)
         assert run.time_left_ms == 38_000

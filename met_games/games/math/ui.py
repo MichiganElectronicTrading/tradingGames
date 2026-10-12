@@ -47,7 +47,7 @@ RULES: dict[str, list[str]] = {
     ],
     SURVIVAL: [
         "Start with 0:30. Correct +10s EASY · +8s MEDIUM · +6s HARD; skip −5s.",
-        "Every 10 correct the bonus drops 0.5s, down to half: +5s · +4s · +3s (Custom: your own bonus and floor).",
+        "Every 5 correct the bonus drops 0.5s (never below +1s). Custom: your own starting bonus.",
         "It ends when the clock hits 0:00.",
         "Points = base × combo · combo ×(1 + 0.1 × streak), up to ×3.",
     ],

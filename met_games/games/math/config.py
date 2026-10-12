@@ -18,10 +18,10 @@ FIXED_FORMAT = (ZETAMAC, OPTIVER)
 
 SPRINT_S = 120
 DURATION_RANGE = (30, 300)
-# Survival: seconds added per correct answer at the start; the floor is half of it. Custom edits both.
+# Survival: seconds added per correct answer at the start (Custom edits it); the floor is 1s everywhere.
 SURVIVAL_BONUS_MS = {EASY: 10_000, MEDIUM: 8_000, HARD: 6_000}
 BONUS_RANGE_MS = (1_000, 20_000)
-FLOOR_MIN_MS = 500
+SURVIVAL_FLOOR_MS = 1_000
 
 
 @dataclass(frozen=True)
@@ -33,7 +33,6 @@ class MathConfig:
     levels: tuple[tuple[str, str], ...] = ()  # Custom: per-family difficulty
     weights: tuple[tuple[str, int], ...] = ()  # Custom: per-family weight (default 1 each)
     bonus_ms: int | None = None  # Custom Survival: the starting bonus (default MEDIUM's)
-    floor_ms: int | None = None  # Custom Survival: the bonus floor (default half the starting bonus)
     seed: int | None = None
 
     def errors(self) -> list[str]:
@@ -50,11 +49,9 @@ class MathConfig:
             errs.append("family difficulty must be easy, medium or hard")
         if any(not 1 <= w <= 5 for _, w in self.weights):
             errs.append("weights must be 1–5")
-        bonus, floor = self.survival_bonus()
+        bonus, _ = self.survival_bonus()
         if not BONUS_RANGE_MS[0] <= bonus <= BONUS_RANGE_MS[1]:
             errs.append("survival bonus must be 1–20s")
-        if not FLOOR_MIN_MS <= floor <= bonus:
-            errs.append("survival floor must be 0.5s up to the bonus")
         return errs
 
     def validate(self) -> None:
@@ -71,13 +68,12 @@ class MathConfig:
         return {f: custom.get(f, default) for f in FAMILIES}
 
     def survival_bonus(self) -> tuple[int, int]:
-        """(starting bonus, floor) in ms: EASY 10s/5s · MEDIUM 8s/4s · HARD 6s/3s; Custom its own (or MEDIUM's)."""
+        """(starting bonus, floor) in ms: EASY 10s · MEDIUM 8s · HARD 6s, Custom its own (or MEDIUM's); floor 1s."""
         if self.difficulty != CUSTOM or self.bonus_ms is None:
             bonus = SURVIVAL_BONUS_MS.get(self.difficulty, SURVIVAL_BONUS_MS[MEDIUM])
         else:
             bonus = self.bonus_ms
-        floor = self.floor_ms if self.difficulty == CUSTOM and self.floor_ms is not None else bonus // 2
-        return bonus, floor
+        return bonus, SURVIVAL_FLOOR_MS
 
     def weight_map(self) -> dict[str, int]:
         return dict(self.weights) if self.difficulty == CUSTOM else {}

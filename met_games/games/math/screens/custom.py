@@ -1,4 +1,4 @@
-"""Custom (Sprint/Survival with the CUSTOM difficulty): duration (Sprint) or the bonus and its floor (Survival), and
+"""Custom (Sprint/Survival with the CUSTOM difficulty): duration (Sprint) or the starting bonus (Survival), and
 per family on/off, difficulty and weight."""
 
 from __future__ import annotations
@@ -13,7 +13,6 @@ from textual.widgets import Static
 from met_games.games.math.config import (
     BONUS_RANGE_MS,
     DURATION_RANGE,
-    FLOOR_MIN_MS,
     MODE_LABELS,
     SPRINT,
     SURVIVAL,
@@ -25,7 +24,7 @@ from met_games.games.math.ui import FAMILY_NAMES
 from met_games.widgets import AMBER, DIM, SELECTED, KeyBar, TitledPanel, TopBar
 
 DURATION_STEP = 15
-BONUS_STEP_MS, FLOOR_STEP_MS = 1_000, 500
+BONUS_STEP_MS = 1_000
 
 
 class MathCustomScreen(Screen):
@@ -52,8 +51,8 @@ class MathCustomScreen(Screen):
         # per family: weight 0 = off, 1–5
         self.weight = {f: (weights.get(f, 1) if f in config.families else 0) for f in FAMILIES}
         self.level = dict(levels)
-        self.bonus_ms, self.floor_ms = config.survival_bonus()
-        self.rows = (["duration"] if self.mode == SPRINT else ["bonus", "floor"] if self.mode == SURVIVAL else []) + \
+        self.bonus_ms, _ = config.survival_bonus()
+        self.rows = (["duration"] if self.mode == SPRINT else ["bonus"] if self.mode == SURVIVAL else []) + \
             [(f, kind) for f in FAMILIES for kind in ("level", "weight")]
         self.index = 0
 
@@ -70,7 +69,7 @@ class MathCustomScreen(Screen):
         on = tuple(f for f in FAMILIES if self.weight[f])
         return MathConfig(mode=self.mode, difficulty="custom", duration_s=self.duration, families=on,
                           levels=tuple(self.level.items()), weights=tuple((f, self.weight[f]) for f in on),
-                          bonus_ms=self.bonus_ms, floor_ms=self.floor_ms)
+                          bonus_ms=self.bonus_ms)
 
     def refresh_view(self) -> None:
         out = Text()
@@ -78,9 +77,7 @@ class MathCustomScreen(Screen):
             if row == "duration":
                 label, value, hint = "duration", clock_text(self.duration * 1000), "0:30–5:00"
             elif row == "bonus":
-                label, value, hint = "bonus per correct", f"+{self.bonus_ms / 1000:g}s", "1–20s · −0.5s every 10"
-            elif row == "floor":
-                label, value, hint = "bonus floor", f"+{self.floor_ms / 1000:g}s", "0.5s up to the bonus"
+                label, value, hint = "bonus per correct", f"+{self.bonus_ms / 1000:g}s", "1–20s · −0.5s every 5, floor 1s"
             else:
                 f, kind = row
                 if kind == "level":
@@ -109,9 +106,6 @@ class MathCustomScreen(Screen):
         elif row == "bonus":
             lo, hi = BONUS_RANGE_MS
             self.bonus_ms = max(lo, min(hi, self.bonus_ms + delta * BONUS_STEP_MS))
-            self.floor_ms = min(self.floor_ms, self.bonus_ms)
-        elif row == "floor":
-            self.floor_ms = max(FLOOR_MIN_MS, min(self.bonus_ms, self.floor_ms + delta * FLOOR_STEP_MS))
         else:
             f, kind = row
             if kind == "level":

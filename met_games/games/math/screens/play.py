@@ -11,7 +11,7 @@ from textual.containers import Horizontal, Vertical
 from textual.widgets import Static
 
 from met_games.games.math.problems import ALLOWED, FAMILIES, FAMILY_LABELS
-from met_games.games.math.run import COMBO_CAP, SKIPPED, WRONG, points
+from met_games.games.math.run import COMBO_CAP, SKIPPED, SURVIVAL_EVERY, WRONG, points
 from met_games.games.math.screens.common import ClockScreen, big, clock_text, crumb, secs
 from met_games.pause import GameKeyBar
 from met_games.widgets import AMBER, DIM, GREEN, RED, TitledPanel, TopBar
@@ -120,9 +120,8 @@ class RunScreen(ClockScreen):
         out = big(clock_text(left), f"bold {RED if left < 10_000 else AMBER}")
         if r.survival:
             out.append(f"\n\n+{r.bonus_ms / 1000:g}s per correct · skip −5s", style="bold")
-            nxt = 10 - r.correct % 10
-            out.append(f"\nbonus drops in {nxt} correct · floor +{r.bonus_floor_ms / 1000:g}s"
-                       if r.bonus_ms > r.bonus_floor_ms else "\nbonus at its floor", style=DIM)
+            nxt = SURVIVAL_EVERY - r.correct % SURVIVAL_EVERY  # correct answers until the next drop
+            out.append(f"\n−0.5s in {nxt}" if r.bonus_ms > r.bonus_floor_ms else "\nfloor", style=DIM)
         return out
 
     def by_type_text(self) -> Text:

@@ -91,30 +91,31 @@ def test_time_to_answer_is_from_when_the_problem_showed():
 
 
 def test_survival_bonus_decay_schedule_and_floor():
-    assert [survival_bonus_ms(n, 8000, 4000) for n in (0, 9, 10, 19, 20, 70, 80, 200)] == \
-        [8000, 8000, 7500, 7500, 7000, 4500, 4000, 4000]
+    assert [survival_bonus_ms(n, 8000, 1000) for n in (0, 4, 5, 9, 10, 65, 69, 70, 500)] == \
+        [8000, 8000, 7500, 7500, 7000, 1500, 1500, 1000, 1000]
 
 
-@pytest.mark.parametrize("difficulty, bonus, floor", [(EASY, 10_000, 5_000), (MEDIUM, 8_000, 4_000),
-                                                      (HARD, 6_000, 3_000)])
-def test_survival_bonus_and_floor_by_difficulty_on_the_clock(difficulty, bonus, floor):
+@pytest.mark.parametrize("difficulty, start, at_floor", [(EASY, 10_000, 90), (MEDIUM, 8_000, 70),
+                                                         (HARD, 6_000, 50)])
+def test_survival_bonus_by_difficulty_drops_every_5_correct_to_1s(difficulty, start, at_floor):
     r = Run(SURVIVAL, fixed(), duration_ms=0, board=difficulty, seed=1,
             config=MathConfig(mode=SURVIVAL, difficulty=difficulty))
-    assert r.time_left_ms == 30_000 and r.bonus_ms == bonus and r.bonus_floor_ms == floor
-    answer(r, 1_000)
-    assert r.time_left_ms == 30_000 - 1_000 + bonus
-    for _ in range(9):
+    assert r.time_left_ms == 30_000 and r.bonus_ms == start and r.bonus_floor_ms == 1_000
+    bonuses = {}
+    while r.correct < at_floor + 30:
+        bonuses[r.correct] = r.bonus_ms
+        bank = r.bank_ms
+        r.advance_to(r.now + 1)  # the run's (fake) millisecond clock
         answer(r)
-    assert r.correct == 10 and r.bonus_ms == bonus - 500  # every 10 correct: −0.5s
-    bank = 30_000 + 10 * bonus
-    answer(r)
-    assert r.bank_ms == bank + bonus - 500
-    r.skip()
-    assert r.bank_ms == bank + bonus - 500 - 5_000 and r.streak == 0  # skip −5s
-    while r.correct < 400:
-        r.advance_to(r.now + 1)
-        answer(r)
-    assert r.bonus_ms == floor  # never below half the start
+        assert r.bank_ms - bank == bonuses[r.correct - 1]  # that bonus is what the answer added
+        if r.correct % 7 == 0:  # skips don't count toward the 5
+            before = r.bonus_ms
+            r.skip()
+            assert r.bonus_ms == before
+    assert (bonuses[0], bonuses[5], bonuses[10]) == (start, start - 500, start - 1_000)  # e.g. 10 → 9.5 → 9
+    assert bonuses[at_floor - 1] == 1_500 and bonuses[at_floor] == 1_000  # reaches 1s exactly there
+    assert all(b == 1_000 for n, b in bonuses.items() if n >= at_floor)  # and stays
+    assert min(bonuses.values()) == 1_000  # never below
 
 
 def test_survival_clock_bonuses_skip_penalty_and_game_over():
@@ -130,18 +131,17 @@ def test_survival_clock_bonuses_skip_penalty_and_game_over():
     assert r.over and r.time_left_ms == 0
 
 
-def test_custom_survival_bonus_and_floor():
-    cfg = MathConfig(mode=SURVIVAL, difficulty="custom", bonus_ms=12_000, floor_ms=2_000)
-    assert cfg.survival_bonus() == (12_000, 2_000) and cfg.errors() == []
-    assert MathConfig(mode=SURVIVAL, difficulty="custom").survival_bonus() == (8_000, 4_000)
-    assert MathConfig(mode=SURVIVAL, difficulty=HARD, bonus_ms=12_000).survival_bonus() == (6_000, 3_000)
-    assert MathConfig(difficulty="custom", bonus_ms=4_000, floor_ms=5_000).errors() == \
-        ["survival floor must be 0.5s up to the bonus"]
+def test_custom_survival_bonus_with_the_fixed_1s_floor():
+    cfg = MathConfig(mode=SURVIVAL, difficulty="custom", bonus_ms=12_000)
+    assert cfg.survival_bonus() == (12_000, 1_000) and cfg.errors() == []
+    assert MathConfig(mode=SURVIVAL, difficulty="custom").survival_bonus() == (8_000, 1_000)
+    assert MathConfig(mode=SURVIVAL, difficulty=HARD, bonus_ms=12_000).survival_bonus() == (6_000, 1_000)
+    assert MathConfig(difficulty="custom", bonus_ms=25_000).errors() == ["survival bonus must be 1–20s"]
     r = Run(SURVIVAL, fixed(), duration_ms=0, board="custom", seed=1, config=cfg)
     for _ in range(300):
         r.advance_to(r.now + 1)
         answer(r)
-    assert r.bonus_ms == 2_000
+    assert r.bonus_ms == 1_000
 
 
 def test_survival_skip_can_end_it():
