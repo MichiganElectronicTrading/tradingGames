@@ -38,6 +38,7 @@ from met_games.games.math.ui import (
     DAILY_ITEM,
     MENU,
     QUIT_ITEM,
+    SETTINGS_ITEM,
     SOON,
     STATS_ITEM,
     SUBTITLE,
@@ -95,6 +96,7 @@ class MathLobby(Screen):
         *[Binding(str(i + 1), f"toggle({i})", show=False) for i in range(4)],
         Binding("d", "daily", "daily"),
         Binding("s", "stats", "stats"),
+        Binding("comma", "settings", "settings"),
         Binding("q", "app.quit", "quit"),
         Binding("escape", "app.pop_screen", "back"),
     ]
@@ -138,7 +140,7 @@ class MathLobby(Screen):
                         yield TitledPanel("ADAPTIVE · YOUR LEVELS", Static(id="levels"), id="levels-panel")
                         yield TitledPanel("YOUR BESTS", Static(id="bests"), id="bests-panel")
         yield KeyBar([("↑↓", "mode"), ("←→", "difficulty"), ("1–4", "toggle mix"), ("⏎", "start"), ("D", "daily"),
-                      ("S", "stats"), ("Q", "quit")])
+                      ("S", "stats"), (",", "settings"), ("Q", "quit")])
 
     def daily_unplayed(self) -> bool:
         return not daily.started(daily.today())
@@ -267,6 +269,8 @@ class MathLobby(Screen):
             self.action_daily()
         elif key == STATS_ITEM:
             self.action_stats()
+        elif key == SETTINGS_ITEM:
+            self.action_settings()
         elif key == QUIT_ITEM:
             self.app.exit()
 
@@ -286,6 +290,11 @@ class MathLobby(Screen):
         i = options.index(self.effective(self.mode))
         self.difficulty = options[max(0, min(len(options) - 1, i + delta))]
         self.refresh_panels()
+
+    def action_settings(self) -> None:
+        from met_games.settings_screen import SettingsScreen
+
+        self.app.push_screen(SettingsScreen())
 
     def action_stats(self) -> None:
         from met_games.games.math.screens.stats import StatsScreen

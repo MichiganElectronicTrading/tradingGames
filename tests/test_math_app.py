@@ -61,7 +61,8 @@ async def test_home_lists_seven_games():
     async with app.run_test(size=SIZE) as pilot:
         await pilot.pause()
         rows = [str(r) for r in app.screen.query_one("#game-list").rows]
-        assert [r.split()[0] for r in rows] == ["CARD", "DICE", "TRADING", "OUTCRY", "ETF", "HI/LO", "MATH"]
+        assert [r.split()[0] for r in rows] == ["CARD", "DICE", "TRADING", "OUTCRY", "ETF", "HI/LO", "MATH", "None",
+                                                "SETTINGS", "QUIT"]
         await pilot.press(*["down"] * 6, "enter")
         await pilot.pause()
         assert isinstance(app.screen, MathLobby)

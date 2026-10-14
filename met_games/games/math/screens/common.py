@@ -13,8 +13,17 @@ from met_games.games.math import daily
 from met_games.games.math.config import CHAIN, DAILY, ESTIMATE, FLOW, MODE_LABELS, PROB_DRILL, MathConfig
 from met_games.games.math.history import HISTORY_FILE, file_run
 from met_games.games.math.run import new_run, new_seed
+from met_games.games.math.screens.display import (
+    ANSWER_SIZE,
+    PROBLEM_SIZE,
+    answer_block,
+    answer_rows,
+    big_text,
+    problem_rows,
+    size_setting,
+)
 from met_games.pause import GameScreen
-from met_games.widgets import big_lines
+from met_games.widgets import AMBER, big_lines
 
 
 def crumb(run: Any) -> str:
@@ -105,11 +114,43 @@ class ClockScreen(GameScreen):
         self.run = run
         self.t0 = 0.0
         self.leaving = False
+        # display size (Settings ▸ MENTAL MATH · DISPLAY), read once per run; drawing only, never input
+        self.problem_size = size_setting(PROBLEM_SIZE)
+        self.answer_size = size_setting(ANSWER_SIZE)
 
     def on_mount(self) -> None:
         self.t0 = self.clock()
         self.refresh_view()
         self.ticker = self.set_interval(0.1, self.sync)
+        self.call_after_refresh(self.redraw)  # widths are known once laid out: refit big text
+
+    def on_resize(self) -> None:
+        self.redraw()
+
+    def redraw(self) -> None:
+        if not self.leaving and self.is_mounted:
+            self.refresh_view()
+
+    # ── big problems and answers (drawing only) ─────────────────────────────
+
+    def problem_into(self, out: Text, text: str, suffix: str, room: int, big_suffix: str = " =") -> None:
+        """Append the problem: big when the problem size allows and it fits, else exactly as NORMAL draws it."""
+        rows = problem_rows(text + big_suffix, self.problem_size, room)
+        if rows is None:
+            out.append(text, style="bold")
+            out.append(suffix)
+        else:
+            out.append_text(big_text(rows, "bold"))
+            out.append("\n\n")
+
+    def answer_into(self, out: Text, typed: str, room: int, input_w: int) -> None:
+        """Append the typed answer line: big when the answer size allows and it fits, else exactly as NORMAL."""
+        rows = answer_rows(typed, self.answer_size, room - 1)
+        if rows is None:
+            out.append(f" {typed}".ljust(input_w), style=f"bold {AMBER}")
+            out.append("\n" + "━" * input_w, style=AMBER)
+        else:
+            out.append_text(answer_block(rows, input_w))
 
     def sync(self) -> None:
         if self.leaving:

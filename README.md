@@ -69,6 +69,29 @@ Hi/Lo: Call the next card higher or lower (or red or black) and size each even-m
 
 Math: Mental math drills with exact answers: arcade sprints, Zetamac and Optiver-style test drills, a weakness report, and a daily challenge
 
+## Settings
+
+**SETTINGS** opens from the home menu (above QUIT) and from the Mental Math lobby (MORE ▸ SETTINGS, or the `,` key). Esc goes back to wherever you came from. Keys: ↑↓ pick a setting · ←→ change its value · R reset this section to NORMAL · Esc back. Every change is saved at once to `~/.met_games/settings.json` (respects `MET_GAMES_HOME`), one namespace per game: `{"math": {"problem_size": "normal", "answer_size": "normal"}}`. A missing or unreadable file reads as all defaults and is rewritten on the next change. Keys from other games are kept. The screen is built from a list of sections, each with its own typed options, so other games can add theirs.
+
+### Mental Math · Display
+
+| size | rows | look |
+|---|---|---|
+| NORMAL (default) | 1 | plain text — exactly what the screens always drew |
+| LARGE | 3 | line digits (Textual's bold 3×3 digits, plus / ÷ % , . − = ? and space) |
+| HUGE | 5 | block digits (█ ▀ ▄), about 4 columns each |
+
+- **PROBLEM SIZE** applies to the main problem in Sprint, Survival, Zetamac, Optiver-style, Chain, Estimate, Flow-style, the daily and drills. In Chain on EASY and MEDIUM, the carry keeps its amber.
+- **ANSWER SIZE** applies to the typed answer line (with a cursor) and the four Optiver-style choice boxes. The boxes grow taller to fit; their number badge stays normal size.
+- Side panels, logs, headers and reports always stay normal size.
+
+**Fallback rules.**
+- **Word problems:** desk, probability, counting, "% of", √, and anything with a letter or symbol the big fonts don't have stay NORMAL, with no message.
+- **Problems:** if a problem is wider than its panel, it drops one size at a time (HUGE → LARGE → NORMAL). It is rechecked on every redraw, so on resize too.
+- **Choice boxes:** each Optiver-style box falls back on its own.
+- **Answer line:** it uses the biggest size that fits as you type, so a long answer shrinks rather than clipping.
+- **Input is unchanged:** big digits are drawing only. Auto-lock, Enter, timing and parsing all use the raw typed text.
+
 ## Mental Math v2
 
 ```bash
@@ -232,3 +255,22 @@ The drill is 20 questions in 10:00. Type an answer and press Enter, or press S t
 - **One-pair detector:** the spec's one-pair mistake ("forgetting that the 3 kickers have different ranks") is the count 13 × C(4,2) × C(48,3) = 1,349,088. C(12,3) × 4³ is the right kicker term, so the detector fires on the C(48,3) version.
 - **Card ladder:** L1–2 hold the 2-card hand questions. L4–5 add 2–3-card counts, with 5-card hands from L5. L7–8 move into 5-card hands (four of a kind, five different ranks, at least one of a rank, full house, three of a kind). L10 adds "exactly 3 of a rank".
 - **Brute-force tests:** the 5-card tests enumerate all 2,598,960 hands once and count rank-specific and suit-specific cases for aces and hearts. Every rank and suit gives the same count by symmetry.
+- **Desk question wording:** every desk question ends by naming the quantity it wants, and that quantity's sign rule. No question asks for a "cost", "loss" or "profit". Two prices quoted against each other are always labelled bid and ask. Answers are checked exactly, sign included: "200" never locks a −200 answer.
+
+  | subtype | template | sign |
+  |---|---|---|
+  | pnl (round trip) | `bought 300 @ 42.10, sold 300 @ 42.35 · P&L = ?` | signed: + gain, − loss |
+  | pnl (multi-fill) | `bought 500 @ 42.15, sold 200 @ 42.40 and 300 @ 42.05 · P&L = ?` | signed |
+  | pnl (marked) | `bought 500 @ 42.15, sold 300 @ 42.40, rest marked @ 42.30 · P&L = ?` | signed; the unsold lots count at the mark |
+  | spread | `bid 91.18 / ask 91.68 · buy 400 at the ask, sell at the bid · P&L = ?` | always negative: (bid − ask) × qty = −200 |
+  | notional | `buy 300 @ 42.10 · notional = ?` | always positive |
+  | vwap | `fills 200 @ 42.10, 300 @ 42.20 · VWAP = ?` | always positive |
+
+  On the keyboard the minus sign is "-". The daily keeps its frozen v1 wording (`daily_v1.py` is never edited, so the daily numbers and their snapshot test don't change). That includes the old positive "cost" spread question, but only inside the daily.
+- **Settings screen layout:** the preview always shows NORMAL text for word problems, matching the game. The PREVIEW and side panels come from each section, so another game's section brings its own.
+- **Big problem text:** the big problem includes its " =" (Estimate shows no "≈" when big, since the badge line already says it). An Optiver-style question renders with " = ?". The NORMAL drawing is byte-for-byte what the screens drew before; `tests/snapshots/math_normal_screens.json` was recorded from the earlier code, and a test compares every run screen against it.
+- **Answer cursor:** the big answer line ends in a "▌" cursor. NORMAL has never shown one, so it still doesn't.
+- **NORMAL with other characters:** `render(text, NORMAL)` returns the text unchanged, even with letters. Only LARGE and HUGE return None for characters they can't draw.
+- **Glyph widths:** at LARGE, "." and "," are one column wide and a space is one column. At HUGE they are two columns wide.
+- **Settings timing:** settings are read when a run starts, so a change applies from the next run.
+- **Corrupt settings:** a settings file that isn't a JSON object (a list, broken JSON, non-UTF-8) reads as all defaults. A game section that isn't an object is replaced on the next save.

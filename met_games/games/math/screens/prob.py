@@ -126,10 +126,9 @@ class ProbScreen(ClockScreen):
                 out.append(f"  {'▲' if new > old else '▼'} from L{old}", style=GREEN if new > old else RED)
         out.append("  whole number" if p.form == COUNT else "  a/b or 3-dp decimal", style=DIM)
         out.append("\n\n")
-        out.append(p.text, style="bold")
-        out.append("  =\n\n")
-        out.append(f" {r.typed}".ljust(INPUT_W), style=f"bold {AMBER}")
-        out.append("\n" + "━" * INPUT_W, style=AMBER)
+        room = self.query_one("#question", Static).content_size.width
+        self.problem_into(out, p.text, "  =\n\n", room)  # word problems: always NORMAL
+        self.answer_into(out, r.typed, room, INPUT_W)
         return out
 
     def so_far_text(self) -> Table | Text:

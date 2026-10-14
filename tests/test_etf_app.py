@@ -124,7 +124,8 @@ async def test_home_lists_all_five_games_and_etf_lobby():
     app = METGamesApp()
     async with app.run_test(size=SIZE) as pilot:
         rows = [str(r) for r in app.screen.query_one("#game-list").rows]
-        assert [r.split()[0] for r in rows] == ["CARD", "DICE", "TRADING", "OUTCRY", "ETF", "HI/LO", "MATH"]
+        assert [r.split()[0] for r in rows] == ["CARD", "DICE", "TRADING", "OUTCRY", "ETF", "HI/LO", "MATH", "None",
+                                                "SETTINGS", "QUIT"]
         await pilot.press("down", "down", "down", "down", "enter")
         await pilot.pause()
         lobby = app.screen

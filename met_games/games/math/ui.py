@@ -18,7 +18,7 @@ BANNER = """\
 
 SUBTITLE = "mental math · exact answers · fast"
 
-DAILY_ITEM, STATS_ITEM, QUIT_ITEM = "daily", "stats", "quit"
+DAILY_ITEM, STATS_ITEM, SETTINGS_ITEM, QUIT_ITEM = "daily", "stats", "settings", "quit"
 SOON = "soon"
 # The MODES list: (kind, key, label). kind: "head" (section title), "mode", SOON (dim, not selectable), "item".
 MENU: list[tuple[str, str, str]] = [
@@ -35,6 +35,7 @@ MENU: list[tuple[str, str, str]] = [
     ("head", "", "MORE"),
     ("item", DAILY_ITEM, "DAILY CHALLENGE"),
     ("item", STATS_ITEM, "MY STATS"),
+    ("item", SETTINGS_ITEM, "SETTINGS"),
     ("item", QUIT_ITEM, "QUIT"),
 ]
 
@@ -96,6 +97,8 @@ RULES: dict[str, list[str]] = {
     ],
     STATS_ITEM: ["Your last 20 runs per mode, median time per family (first 10 vs last 10 runs), your adaptive "
                  "levels with 7-day arrows, bests, and what to focus on next (F drills it)."],
+    SETTINGS_ITEM: ["Display size for problems and answers (NORMAL, LARGE or HUGE), and more as other games add "
+                    "theirs. Saved as you change it."],
     QUIT_ITEM: ["Leave MET Games."],
 }
 

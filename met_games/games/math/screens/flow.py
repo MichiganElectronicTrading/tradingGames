@@ -85,10 +85,9 @@ class FlowScreen(ClockScreen):
         hint = {"decimal": "as a decimal", "fraction": "as a fraction"}.get(p.form, "")
         out.append(f"  {hint}" if hint else "", style=DIM)
         out.append("\n\n")
-        out.append(p.text, style="bold")
-        out.append("  =\n\n")
-        out.append(f" {r.typed}".ljust(INPUT_W), style=f"bold {AMBER}")
-        out.append("\n" + "━" * INPUT_W, style=AMBER)
+        room = self.query_one("#question", Static).content_size.width
+        self.problem_into(out, p.text, "  =\n\n", room)
+        self.answer_into(out, r.typed, room, INPUT_W)
         return out
 
     def pace_text(self) -> Text:

@@ -121,10 +121,9 @@ class EstimateScreen(ClockScreen):
         out.append(f" {KIND_LABELS[q.kind]} ", style=f"bold #000000 on {AMBER}")
         out.append("  ≈ within 1% for full points", style=DIM)
         out.append("\n\n")
-        out.append(q.text, style="bold")
-        out.append("  ≈\n\n")
-        out.append(f" {r.typed}".ljust(INPUT_W), style=f"bold {AMBER}")
-        out.append("\n" + "━" * INPUT_W, style=AMBER)
+        room = self.query_one("#question", Static).content_size.width
+        self.problem_into(out, q.text, "  ≈\n\n", room, big_suffix="")  # √ and "% of" stay NORMAL
+        self.answer_into(out, r.typed, room, INPUT_W)
         return out
 
     def scoring_text(self) -> Text:

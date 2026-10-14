@@ -179,7 +179,7 @@ def _vwap(p: Problem) -> str:
 
 def _spread(p: Problem) -> str:
     bid, ask, q = p.operands
-    return f"({_px(ask)} − {_px(bid)}) × {q} = {dec(ask - bid)} × {q} = {dec(p.answer)}"
+    return f"({_px(bid)} − {_px(ask)}) × {q} = −{dec(ask - bid)} × {q} = {dec(p.answer)}"
 
 
 def _notional(p: Problem) -> str:
@@ -229,7 +229,8 @@ TIPS: dict[str, Tip] = {t.key: t for t in (
         _pnl),
     Tip("vwap", "VWAP", "VWAP = low fill + gap × share of size at the high fill (each higher fill adds its own "
         "gap × share).", _vwap),
-    Tip("spread", "Spread cost", "Crossing the spread costs (ask − bid) × quantity.", _spread),
+    Tip("spread", "Crossing the spread", "Buy at the ask, sell at the bid: P&L = (bid − ask) × quantity, always "
+        "negative.", _spread),
     Tip("notional", "Notional", "Split the price: qty × whole dollars + qty × cents.", _notional),
 )}
 

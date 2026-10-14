@@ -17,7 +17,9 @@ from met_games.games.math.chain import PERCENT, TIMEOUT, ChainRun
 from met_games.games.math.history import file_arcade
 from met_games.games.math.ladder import TRACK_LABELS
 from met_games.games.math.run import points
+from met_games.bigtext import width
 from met_games.games.math.screens.common import ClockScreen, big, crumb, secs, start_run
+from met_games.games.math.screens.display import problem_rows, size_of
 from met_games.games.math.screens.play import combo_bar
 from met_games.games.math.tips import render
 from met_games.pause import GameKeyBar, to_lobby
@@ -117,14 +119,21 @@ class ChainScreen(ClockScreen):
         out.append(f"  {TRACK_LABELS[link.track]}", style=DIM)
         out.append(f"  +{points(link.base, r.length)}", style=f"bold {GREEN}")
         out.append("\n\n")
-        if r.hidden:
-            out.append("?", style=f"bold {DIM}")
-        else:
-            out.append(str(link.carry), style=f"bold {AMBER}")
-        out.append(f" {link.op_text}", style="bold")
-        out.append("  =\n\n")
-        out.append(f" {r.typed}".ljust(INPUT_W), style=f"bold {AMBER}")
-        out.append("\n" + "━" * INPUT_W, style=AMBER)
+        room = self.query_one("#link", Static).content_size.width
+        carry = "?" if r.hidden else str(link.carry)
+        carry_style = f"bold {DIM}" if r.hidden else f"bold {AMBER}"
+        rows = problem_rows(f"{carry} {link.op_text} =", self.problem_size, room)
+        if rows is None:
+            out.append(carry, style=carry_style)
+            out.append(f" {link.op_text}", style="bold")
+            out.append("  =\n\n")
+        else:  # big: the carry's columns keep their colour (amber on EASY / MEDIUM)
+            cut = width(carry, size_of(rows))
+            for i, row in enumerate(rows):
+                out.append(("\n" if i else "") + row[:cut], style=carry_style)
+                out.append(row[cut:], style="bold")
+            out.append("\n\n")
+        self.answer_into(out, r.typed, room, INPUT_W)
         return out
 
     def log_text(self) -> Text:

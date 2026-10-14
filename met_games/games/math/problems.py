@@ -42,7 +42,7 @@ SUBTYPE_LABELS = {
     "frac_dec": "fraction → decimal", "dec_frac": "decimal → fraction", "dec_int": "decimal × integer",
     "frac_pm": "fraction ± fraction", "mixed": "fraction ± decimal",
     "pct_of": "percent of", "pct_change": "% change", "chained": "chained %", "reverse": "reverse %",
-    "pnl": "P&L", "vwap": "VWAP", "spread": "spread cost", "notional": "notional",
+    "pnl": "P&L", "vwap": "VWAP", "spread": "crossing the spread", "notional": "notional",
 }
 
 ANY, DECIMAL, FRACTION = "any", "decimal", "fraction"  # the form an answer must be typed in
@@ -387,7 +387,7 @@ def _round_trip(rng: random.Random, level: str) -> Problem:
     if rng.random() < 0.5 and b - d >= 10:
         s = b - d
     fills = ((q, b), (-q, s))
-    return Problem(f"bought {q} @ {_px(b, level)}, sold @ {_px(s, level)}: P&L", fills_pnl(fills), DESK, "pnl",
+    return Problem(f"bought {q} @ {_px(b, level)}, sold {q} @ {_px(s, level)} · P&L = ?", fills_pnl(fills), DESK, "pnl",
                    level, "pnl", (fills, None), steps=(("sub", s, b), ("mul", s - b, q)))
 
 
@@ -407,7 +407,7 @@ def _vwap_two(rng: random.Random, level: str) -> Problem:
     fills = ((q_lo, lo), (q_hi, hi))
     v = vwap(fills)
     listed = ", ".join(f"{q} @ {money(p)}" for q, p in fills)
-    return Problem(f"VWAP of {listed}", v, DESK, "vwap", level, "vwap", fills,
+    return Problem(f"fills {listed} · VWAP = ?", v, DESK, "vwap", level, "vwap", fills,
                    steps=(("sub", hi, lo), *mid, ("add", lo, v - lo)))
 
 
@@ -419,14 +419,15 @@ def desk(rng: random.Random, level: str, subtype: str) -> Problem:
         width = _diff(rng, level)
         bid = _price(rng, level, width)
         ask = bid + width
-        return Problem(f"{_px(bid, level)} / {_px(ask, level)}: buy {q} at the ask, sell at the bid. cost",
-                       width * q, DESK, subtype, level, "spread", (bid, ask, q),
-                       steps=(("sub", ask, bid), ("mul", width, q)))
+        # buying at the ask and selling at the bid loses the spread: P&L = (bid − ask) × q, always negative
+        return Problem(f"bid {_px(bid, level)} / ask {_px(ask, level)} · buy {q} at the ask, sell at the bid · P&L = ?",
+                       -width * q, DESK, subtype, level, "spread", (bid, ask, q),
+                       steps=(("sub", bid, ask), ("mul", bid - ask, q)))
     if subtype == "notional":
         q = _qty(rng, 1, 9)
         # EASY: a whole-dollar price that's 1 digit and zeros (1–9 or 10–90); MEDIUM: three digits (42.10)
         p = Fraction(rng.randint(1, 9) * rng.choice((1, 10))) if level == EASY else Fraction(rng.randint(100, 999), 10)
-        return Problem(f"notional of {q} @ {_px(p, level)}", q * p, DESK, subtype, level, "notional", (q, p),
+        return Problem(f"buy {q} @ {_px(p, level)} · notional = ?", q * p, DESK, subtype, level, "notional", (q, p),
                        steps=(("mul", q, p),))
     if subtype == "vwap" and level == MEDIUM:
         return _vwap_two(rng, level)
@@ -454,7 +455,7 @@ def desk(rng: random.Random, level: str, subtype: str) -> Problem:
             steps.append(("add", qtys[0] + qtys[1], qtys[2]))
         steps += [("div", sum(weighted), sum(qtys)), ("add", low, v - low)]
         listed = ", ".join(f"{q} @ {money(p)}" for q, p in fills)
-        return Problem(f"VWAP of {listed}", v, DESK, subtype, level, "vwap", fills, steps=tuple(steps))
+        return Problem(f"fills {listed} · VWAP = ?", v, DESK, subtype, level, "vwap", fills, steps=tuple(steps))
     # HARD P&L: a buy split into two sells, or a partial sell with the rest marked
     q = _qty(rng, 3, 9)
     b = _cents(rng, 1050, 9949)
@@ -470,12 +471,13 @@ def desk(rng: random.Random, level: str, subtype: str) -> Problem:
     if rng.random() < 0.5:
         s1, s2 = near(), near()
         fills = ((q, b), (-q1, s1), (-(q - q1), s2))
-        return Problem(f"bought {q} @ {money(b)}, sold {q1} @ {money(s1)} and {q - q1} @ {money(s2)}: P&L",
+        return Problem(f"bought {q} @ {money(b)}, sold {q1} @ {money(s1)} and {q - q1} @ {money(s2)} · P&L = ?",
                        fills_pnl(fills), DESK, "pnl", level, "pnl_multi", (fills, None),
                        steps=legs(s1, q1, s2, q - q1))
     s, m = near(), near()
     fills = ((q, b), (-q1, s))
-    return Problem(f"bought {q} @ {money(b)}, sold {q1} @ {money(s)}, mark {money(m)}: P&L", fills_pnl(fills, m),
+    return Problem(f"bought {q} @ {money(b)}, sold {q1} @ {money(s)}, rest marked @ {money(m)} · P&L = ?",
+                   fills_pnl(fills, m),
                    DESK, "pnl", level, "pnl_marked", (fills, m), steps=legs(s, q1, m, q - q1))
 
 

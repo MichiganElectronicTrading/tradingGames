@@ -69,9 +69,9 @@ def recompute(p: Problem) -> F:
         sold = sum(-q * px for q, px in fills if q < 0)
         open_qty = sum(q for q, _ in fills)
         return sold - bought + (open_qty * mark if open_qty else 0)
-    if s == "spread":
+    if s == "spread":  # buy at the ask, sell at the bid
         bid, ask, q = o
-        return (ask - bid) * q
+        return (bid - ask) * q
     if s == "notional":
         return o[0] * o[1]
     if s == "vwap":
@@ -219,11 +219,12 @@ def test_vwap_of_two_and_three_fills():
     assert vwap(((100, F("10.00")), (100, F("10.10")), (200, F("10.20")))) == F("10.125")
 
 
-def test_spread_cost():
+def test_crossing_the_spread_is_a_negative_pnl():
     p = make(random.Random(5), DESK, MEDIUM, "spread")
     bid, ask, q = p.operands
-    assert p.answer == (ask - bid) * q
-    assert (F("42.15") - F("42.10")) * 300 == 15  # 42.10 / 42.15, buy 300 at the ask, sell at the bid
+    assert p.answer == (bid - ask) * q < 0
+    assert p.text == f"bid {dec(bid, 2)} / ask {dec(ask, 2)} · buy {q} at the ask, sell at the bid · P&L = ?"
+    assert (F("42.10") - F("42.15")) * 300 == -15  # bid 42.10 / ask 42.15, buy 300 at the ask, sell at the bid
 
 
 def test_marked_pnl():
@@ -237,7 +238,7 @@ def test_desk_text_reads_like_the_desk():
     texts = {make(rng, DESK, HARD).tip_key: None for _ in range(200)}
     assert {"pnl_multi", "pnl_marked", "vwap"} <= set(texts)
     p = make(random.Random(3), DESK, MEDIUM, "notional")
-    assert p.text == f"notional of {p.operands[0]} @ {dec(p.operands[1], 2)}"
+    assert p.text == f"buy {p.operands[0]} @ {dec(p.operands[1], 2)} · notional = ?"
 
 
 # ── answer input ────────────────────────────────────────────────────────────
@@ -375,7 +376,7 @@ def test_worked_easy_desk():
     assert fills_pnl(((300, F(42)), (-300, F(45)))) == 900
     p = make(random.Random(4), DESK, EASY, "pnl")
     (q, b), (_, s) = p.operands[0]
-    assert p.text == f"bought {q} @ {b}, sold @ {s}: P&L" and p.answer == (s - b) * q
+    assert p.text == f"bought {q} @ {b}, sold {q} @ {s} · P&L = ?" and p.answer == (s - b) * q
     assert make(random.Random(4), DESK, EASY, "notional").answer % 100 == 0
     assert not within_difficulty([("mul", 300, 42)], EASY)  # a 2-digit price × size is MEDIUM work
 

@@ -356,8 +356,9 @@ def _desk(rng: random.Random, sub: str, params: Any) -> Problem:
         width = rng.choice(diffs)
         bid = _price(rng, kind, width)
         ask = bid + width
-        return Problem(f"{_px(bid, kind)} / {_px(ask, kind)}: buy {q} at the ask, sell at the bid. cost", width * q,
-                       DESK, sub, "", "spread", (bid, ask, q), steps=(("sub", ask, bid), ("mul", width, q)))
+        return Problem(f"bid {_px(bid, kind)} / ask {_px(ask, kind)} · buy {q} at the ask, sell at the bid · P&L = ?",
+                       -width * q, DESK, sub, "", "spread", (bid, ask, q),
+                       steps=(("sub", bid, ask), ("mul", bid - ask, q)))
     if sub == "notional":
         top, kind = params
         q = 100 * rng.randint(1, top)
@@ -365,7 +366,8 @@ def _desk(rng: random.Random, sub: str, params: Any) -> Problem:
              "halves": lambda: Fraction(rng.randint(21, 199), 2),
              "tenths": lambda: Fraction(rng.randint(100, 999), 10)}[kind]()
         shown = dec(p) if kind == "digit" else money(p)
-        return Problem(f"notional of {q} @ {shown}", q * p, DESK, sub, "", "notional", (q, p), steps=(("mul", q, p),))
+        return Problem(f"buy {q} @ {shown} · notional = ?", q * p, DESK, sub, "", "notional", (q, p),
+                       steps=(("mul", q, p),))
     if sub == "vwap":
         return _vwap(rng, params)
     if params[0] == "trip":
@@ -377,7 +379,8 @@ def _desk(rng: random.Random, sub: str, params: Any) -> Problem:
         if rng.random() < 0.5 and b - d >= 10:
             s = b - d
         fills = ((q, b), (-q, s))
-        return Problem(f"bought {q} @ {_px(b, kind)}, sold @ {_px(s, kind)}: P&L", fills_pnl(fills), DESK, "pnl", "",
+        return Problem(f"bought {q} @ {_px(b, kind)}, sold {q} @ {_px(s, kind)} · P&L = ?", fills_pnl(fills), DESK,
+                       "pnl", "",
                        "pnl", (fills, None), steps=(("sub", s, b), ("mul", s - b, q)))
     _, (qlo, qhi), kinds, step, top = params
     q = 100 * rng.randint(qlo, qhi)
@@ -395,11 +398,12 @@ def _desk(rng: random.Random, sub: str, params: Any) -> Problem:
     if rng.choice(kinds) == "multi":
         s1, s2 = near(), near()
         fills = ((q, b), (-q1, s1), (-(q - q1), s2))
-        return Problem(f"bought {q} @ {money(b)}, sold {q1} @ {money(s1)} and {q - q1} @ {money(s2)}: P&L",
+        return Problem(f"bought {q} @ {money(b)}, sold {q1} @ {money(s1)} and {q - q1} @ {money(s2)} · P&L = ?",
                        fills_pnl(fills), DESK, "pnl", "", "pnl_multi", (fills, None), steps=legs(s1, q1, s2, q - q1))
     s, m = near(), near()
     fills = ((q, b), (-q1, s))
-    return Problem(f"bought {q} @ {money(b)}, sold {q1} @ {money(s)}, mark {money(m)}: P&L", fills_pnl(fills, m),
+    return Problem(f"bought {q} @ {money(b)}, sold {q1} @ {money(s)}, rest marked @ {money(m)} · P&L = ?",
+                   fills_pnl(fills, m),
                    DESK, "pnl", "", "pnl_marked", (fills, m), steps=legs(s, q1, m, q - q1))
 
 
@@ -419,7 +423,7 @@ def _vwap(rng: random.Random, params: tuple[Any, ...]) -> Problem:
         fills = ((q_lo, lo), (q_hi, hi))
         v = vwap(fills)
         listed = ", ".join(f"{q} @ {money(p)}" for q, p in fills)
-        return Problem(f"VWAP of {listed}", v, DESK, "vwap", "", "vwap", fills,
+        return Problem(f"fills {listed} · VWAP = ?", v, DESK, "vwap", "", "vwap", fills,
                        steps=(("sub", hi, lo), *mid, ("add", lo, v - lo)))
     _, counts, width = params
     while True:
@@ -447,7 +451,7 @@ def _vwap(rng: random.Random, params: tuple[Any, ...]) -> Problem:
         total_q += q
     steps += [("div", total_w, total_q), ("add", low, v - low)]
     listed = ", ".join(f"{q} @ {money(p)}" for q, p in fills)
-    return Problem(f"VWAP of {listed}", v, DESK, "vwap", "", "vwap", fills, steps=tuple(steps))
+    return Problem(f"fills {listed} · VWAP = ?", v, DESK, "vwap", "", "vwap", fills, steps=tuple(steps))
 
 
 MAKERS = {ADDSUB: _addsub, MUL: _mul, DIV: _div, DEC: _decfrac, FRAC: _decfrac, PCT_TRACK: _pct, DESK_TRACK: _desk}

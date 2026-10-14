@@ -14,6 +14,7 @@ from met_games.games.math.ladder import LEVEL_MAX, SUBTYPE_TRACK, TRACK_LABELS, 
 from met_games.games.math.problems import ALLOWED, FAMILIES, FAMILY_LABELS
 from met_games.games.math.run import COMBO_CAP, SKIPPED, SURVIVAL_EVERY, WRONG, points
 from met_games.games.math.screens.common import ClockScreen, big, clock_text, crumb, secs
+from met_games.games.math.screens.display import choice_text
 from met_games.pause import GameKeyBar
 from met_games.widgets import AMBER, DIM, GREEN, RED, TitledPanel, TopBar
 
@@ -110,10 +111,9 @@ class RunScreen(ClockScreen):
         hint = {"decimal": "as a decimal", "fraction": "as a fraction"}.get(p.form, "")
         out.append(f"  {hint}" if hint else "", style=DIM)
         out.append("\n\n")
-        out.append(p.text, style="bold")
-        out.append("  =\n\n")
-        out.append(f" {r.typed}".ljust(INPUT_W), style=f"bold {AMBER}")
-        out.append("\n" + "━" * INPUT_W, style=AMBER)
+        room = self.query_one("#problem", Static).content_size.width
+        self.problem_into(out, p.text, "  =\n\n", room)
+        self.answer_into(out, r.typed, room, INPUT_W)
         return out
 
     def last_text(self) -> Text:
@@ -240,16 +240,34 @@ class OptiverScreen(ClockScreen):
             head = Text(f"Q{r.i + 1}  ", style=DIM)
             head.append(f" {FAMILY_LABELS[q.problem.family]} ", style=f"bold #000000 on {AMBER}")
             head.append("\n\n")
-            head.append(q.problem.text, style="bold")
-            head.append("  = ?")
-            self.query_one("#question", Static).update(head)
+            question = self.query_one("#question", Static)
+            self.problem_into(head, q.problem.text, "  = ?", question.content_size.width, big_suffix=" = ?")
+            question.update(head)
             for i, opt in enumerate(q.options):
-                cell = Text(f" {i + 1} ", style=f"bold #000000 on {AMBER}")
-                cell.append(f"  {opt}", style="bold")
-                self.query_one(f"#option-{i}", Static).update(cell)
+                self.show_option(i, opt)
         left = r.time_left_ms
         self.query_one("#clock", Static).update(big(clock_text(left), f"bold {RED if left < 60_000 else AMBER}"))
         self.query_one("#pace", Static).update(self.pace_text())
+
+    def show_option(self, i: int, opt: str) -> None:
+        """A choice box: the number badge stays normal; the value at the answer size that fits this box (each box
+        falls back on its own), the box growing to fit."""
+        box = self.query_one(f"#option-{i}", Static)
+        badge = Text(f" {i + 1} ", style=f"bold #000000 on {AMBER}")
+        big = choice_text(badge, opt, self.answer_size, box.content_size.width) if self.answer_size != "normal" \
+            else None
+        if big is None:
+            cell = badge
+            cell.append(f"  {opt}", style="bold")
+            if box.styles.height is not None and box.has_class("big"):
+                box.styles.height = None  # back to the stylesheet's 3 rows
+                box.remove_class("big")
+            box.update(cell)
+            return
+        content, rows = big
+        box.add_class("big")
+        box.styles.height = rows + 2  # the border
+        box.update(content)
 
     def pace_text(self) -> Text:
         avg, need = self.run.pace()

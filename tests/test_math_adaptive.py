@@ -53,7 +53,7 @@ from met_games.games.math.problems import (
 from met_games.games.math.run import CORRECT, new_focus_drill, new_run
 
 N = 2000  # problems per track × level
-SIGNED = {"pct_change", "chained", "pnl"}  # answers that may be negative
+SIGNED = {"pct_change", "chained", "pnl"}  # answers that may be negative (crossing the spread always is)
 
 
 @pytest.fixture(autouse=True)
@@ -88,7 +88,7 @@ def test_every_rung_generates_valid_problems(track, level):
         assert recompute(p) == p.answer, p
         assert terminates_within(p.answer, MAX_PLACES[p.family]), p
         assert accepts(p, p.answer_text), p
-        assert p.subtype in SIGNED or p.answer > 0, p
+        assert p.subtype in SIGNED or (p.answer < 0 if p.subtype == "spread" else p.answer > 0), p
         assert digits(p) <= DIGITS[track][level - 1], p
         if level in CEILING:
             assert within_difficulty(p.steps, CEILING[level]), p

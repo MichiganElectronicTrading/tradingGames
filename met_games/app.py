@@ -18,6 +18,7 @@ from met_games.games.dice.ui import DICE_UI
 from met_games.games.etf.ui import ETF_UI
 from met_games.games.hilo.screens.lobby import HiloLobby
 from met_games.games.hilo.ui import HILO_UI
+from met_games.games.math.screens.display import MATH_DISPLAY
 from met_games.games.math.screens.lobby import MathLobby
 from met_games.games.outcry.ui import OUTCRY_UI
 from met_games.games.sumgame.screens.lobby import LobbyScreen as SumLobby
@@ -45,6 +46,10 @@ GAMES: list[GameInfo] = [
 ]
 
 
+# Settings sections, one or more per game (each game's own options); the Settings screen lists them in this order.
+SETTINGS_SECTIONS = [MATH_DISPLAY]
+
+
 class HomeScreen(Screen):
     BINDINGS = [("q", "app.quit", "quit")]
 
@@ -58,16 +63,25 @@ class HomeScreen(Screen):
         yield TopBar("MET GAMES")
         with Vertical(id="home-body"):
             yield Static("MET GAMES · solo trading drills · Michigan Electronic Trading", id="home-title")
-            rows = []
+            rows: list[Text | None] = []
             for g in GAMES:
                 row = Text(f"{g.title:<14}", style="bold")
                 row.append(g.tagline, style=DIM)
                 rows.append(row)
+            rows += [None, Text(f"{'SETTINGS':<14}", style="bold").append("display and more", style=DIM),
+                     Text("QUIT", style="bold")]
             yield TitledPanel("GAMES", RowList(rows, id="game-list"), double=True, id="games")
         yield KeyBar([("↑↓", "move"), ("⏎", "open"), ("Q", "quit")])
 
     def on_row_list_chosen(self, message: RowList.Chosen) -> None:
-        self.app.push_screen(GAMES[message.index].lobby())
+        if message.index < len(GAMES):
+            self.app.push_screen(GAMES[message.index].lobby())
+        elif message.index == len(GAMES) + 1:  # SETTINGS (after the divider)
+            from met_games.settings_screen import SettingsScreen
+
+            self.app.push_screen(SettingsScreen())
+        else:
+            self.app.exit()
 
 
 class METGamesApp(App):
