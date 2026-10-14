@@ -10,7 +10,7 @@ from textual.app import App
 from textual.screen import Screen
 
 from met_games.games.math import daily
-from met_games.games.math.config import DAILY, MODE_LABELS, MathConfig
+from met_games.games.math.config import CHAIN, DAILY, ESTIMATE, FLOW, MODE_LABELS, PROB_DRILL, MathConfig
 from met_games.games.math.history import HISTORY_FILE, file_run
 from met_games.games.math.run import new_run, new_seed
 from met_games.pause import GameScreen
@@ -50,11 +50,47 @@ def play_screen(run: Any) -> Screen:
     from met_games.games.math.run import OptiverRun
     from met_games.games.math.screens.play import OptiverScreen, RunScreen
 
+    if run.mode == CHAIN:
+        from met_games.games.math.screens.chain import ChainScreen
+
+        return ChainScreen(run)
+    if run.mode == ESTIMATE:
+        from met_games.games.math.screens.estimate import EstimateScreen
+
+        return EstimateScreen(run)
+    if run.mode == FLOW:
+        from met_games.games.math.screens.flow import FlowScreen
+
+        return FlowScreen(run)
+    if run.mode == PROB_DRILL:
+        from met_games.games.math.screens.prob import ProbScreen
+
+        return ProbScreen(run)
     return OptiverScreen(run) if isinstance(run, OptiverRun) else RunScreen(run)
 
 
+def make_run(config: MathConfig, seed: int) -> Any:
+    if config.mode == CHAIN:
+        from met_games.games.math.chain import ChainRun
+
+        return ChainRun(config, seed)
+    if config.mode == ESTIMATE:
+        from met_games.games.math.estimate import EstimateRun
+
+        return EstimateRun(config, seed)
+    if config.mode == FLOW:
+        from met_games.games.math.flow import FlowRun
+
+        return FlowRun(config, seed)
+    if config.mode == PROB_DRILL:
+        from met_games.games.math.probdrill import ProbRun
+
+        return ProbRun(config, seed)
+    return new_run(config, seed)
+
+
 def start_run(app: App, config: MathConfig, *, switch: bool) -> None:
-    run = new_run(config, run_seed(app, config))
+    run = make_run(config, run_seed(app, config))
     (app.switch_screen if switch else app.push_screen)(play_screen(run))
 
 
@@ -85,15 +121,18 @@ class ClockScreen(GameScreen):
             self.refresh_view()
 
     def finish(self) -> None:
-        from met_games.games.math.screens.report import ReportScreen
-
         if self.leaving:
             return
         self.leaving = True
         self.ticker.stop()
         self.run.end()
         self.front()
-        self.app.switch_screen(ReportScreen(self.run))
+        self.app.switch_screen(self.report_screen())
+
+    def report_screen(self) -> Screen:
+        from met_games.games.math.screens.report import ReportScreen
+
+        return ReportScreen(self.run)
 
     def action_end_run(self) -> None:
         self.sync()

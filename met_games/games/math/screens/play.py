@@ -10,6 +10,7 @@ from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Static
 
+from met_games.games.math.ladder import LEVEL_MAX, SUBTYPE_TRACK, TRACK_LABELS, TRACKS
 from met_games.games.math.problems import ALLOWED, FAMILIES, FAMILY_LABELS
 from met_games.games.math.run import COMBO_CAP, SKIPPED, SURVIVAL_EVERY, WRONG, points
 from met_games.games.math.screens.common import ClockScreen, big, clock_text, crumb, secs
@@ -24,6 +25,22 @@ INPUT_W = 18
 def combo_bar(combo) -> Text:
     filled = round(BAR * (combo - 1) / (COMBO_CAP - 1))
     return Text("█" * filled + "░" * (BAR - filled), style=RED if combo >= 2 else AMBER)
+
+
+def levels_text(ladder) -> Text:
+    """Adaptive runs: every track's level now, against where it started this run, and the latest change."""
+    out = Text()
+    for i, t in enumerate(TRACKS):
+        lv, start = ladder.level(t), ladder.start[t]
+        out.append(("\n" if i else "") + f"{TRACK_LABELS[t]:<5}", style="bold")
+        out.append("■" * lv + "·" * (LEVEL_MAX - lv), style=AMBER)
+        out.append(f" L{lv:<2}", style="bold")
+        if lv != start:
+            out.append(f" {'▲' if lv > start else '▼'} from L{start}", style=GREEN if lv > start else RED)
+    if ladder.changes:
+        t, old, new = ladder.changes[-1]
+        out.append(f"\n\nlast: {TRACK_LABELS[t]} L{old} → L{new}", style=GREEN if new > old else RED)
+    return out
 
 
 class RunScreen(ClockScreen):
@@ -51,7 +68,7 @@ class RunScreen(ClockScreen):
                 yield TitledPanel("LAST ANSWERS", Static(id="last"))
             with Vertical(id="right"):
                 yield TitledPanel("CLOCK", Static(id="clock"))
-                yield TitledPanel("BY TYPE", Static(id="by-type"))
+                yield TitledPanel("LEVELS" if self.run.ladder else "BY TYPE", Static(id="by-type"))
         yield GameKeyBar([("0–9 . - /", "type"), ("⌫", "erase"), ("Tab", "skip"), ("^E", "end run")])
 
     # ── view ────────────────────────────────────────────────────────────────
@@ -86,6 +103,8 @@ class RunScreen(ClockScreen):
         if p is None:
             return out
         out.append(f" {FAMILY_LABELS[p.family]} ", style=f"bold #000000 on {AMBER}")
+        if r.ladder:
+            out.append(f"  {TRACK_LABELS[SUBTYPE_TRACK[p.subtype]]} {p.level}", style=f"bold {AMBER}")
         if r.scored:
             out.append(f"  +{points(p.base, r.streak)}", style=f"bold {GREEN}")
         hint = {"decimal": "as a decimal", "fraction": "as a fraction"}.get(p.form, "")
@@ -126,6 +145,8 @@ class RunScreen(ClockScreen):
 
     def by_type_text(self) -> Text:
         r = self.run
+        if r.ladder:
+            return levels_text(r.ladder)
         out = Text()
         for i, f in enumerate(FAMILIES):
             mine = [a for a in r.attempts if a.problem.family == f]

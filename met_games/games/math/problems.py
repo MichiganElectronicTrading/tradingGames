@@ -21,6 +21,11 @@ CORE, DECFRAC, PCT, DESK = "core", "decfrac", "pct", "desk"
 FAMILIES = (CORE, DECFRAC, PCT, DESK)
 FAMILY_LABELS = {CORE: "core", DECFRAC: "frac", PCT: "%", DESK: "desk"}
 BASE = {CORE: 100, DECFRAC: 150, PCT: 150, DESK: 200}
+# Probability (prob.py) is a family of its own, only in the Probability drill: never in FAMILIES, so it is never mixed
+# into Sprint, Survival, Chain or the daily.
+PROB = "prob"
+FAMILY_LABELS[PROB] = "prob"
+BASE[PROB] = 200
 MAX_PLACES = {CORE: 0, DECFRAC: 4, PCT: 2, DESK: 2}  # every answer terminates within these decimal places
 
 SUBTYPES: dict[str, dict[str, tuple[str, ...]]] = {

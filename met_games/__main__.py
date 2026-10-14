@@ -31,15 +31,20 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="hilo only: the deck to start on — interview, full or redblack (default: the difficulty's deck)",
     )
     parser.add_argument(
-        "--mode", choices=["sprint", "survival", "zetamac", "optiver"], metavar="MODE",
-        help="math only: start this mode straight away — sprint, survival, zetamac or optiver",
+        "--mode", choices=["sprint", "survival", "chain", "estimate", "zetamac", "optiver", "flow", "prob"],
+        metavar="MODE",
+        help="math only: start this mode straight away — sprint, survival, chain, estimate, zetamac, optiver, flow "
+             "or prob",
     )
     parser.add_argument(
-        "--difficulty", choices=["easy", "medium", "hard"], metavar="LEVEL",
-        help="math only: the difficulty for sprint and survival — easy, medium or hard (default: medium)",
+        "--difficulty", choices=["easy", "medium", "hard", "adaptive"], metavar="LEVEL",
+        help="math only: the difficulty — easy, medium or hard (default: medium); adaptive for sprint, survival and "
+             "prob",
     )
     parser.add_argument("--daily", action="store_true", help="math only: open today's daily challenge")
     args = parser.parse_args(argv)
+    if args.difficulty == "adaptive" and args.mode not in (None, "sprint", "survival", "prob"):
+        parser.error(f"--difficulty adaptive works only with --mode sprint, survival or prob, not {args.mode}")
     if args.daily and args.game is None:
         args.game = "math"
     return args

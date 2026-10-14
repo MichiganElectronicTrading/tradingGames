@@ -9,7 +9,9 @@ from fractions import Fraction
 from typing import Any
 
 from met_games import storage
-from met_games.games.math.config import DAILY, DRILL, OPTIVER, ZETAMAC
+from met_games.games.math import adaptive
+from met_games.games.math.config import CHAIN, DAILY, DRILL, ESTIMATE, FLOW, OPTIVER, PROB_DRILL, ZETAMAC
+from met_games.games.math.ladder import anchor_of
 from met_games.games.math.problems import FAMILIES, LEVELS, MEDIUM, SUBTYPE_LABELS, SUBTYPES
 from met_games.games.math.run import CORRECT, Attempt
 from met_games.games.math.tips import render
@@ -26,8 +28,17 @@ SUBTYPE_ORDER = [s for f in FAMILIES for s in dict.fromkeys(x for lv in SUBTYPES
 # ── logging ─────────────────────────────────────────────────────────────────
 
 
+def json_number(x: Fraction | int) -> int | float:
+    """A score for JSON: whole numbers as ints; Estimate's half points (x.5) as floats, which hold them exactly."""
+    x = Fraction(x)
+    return x.numerator if x.denominator == 1 else float(x)
+
+
 def problem_records(run: Any, when: datetime) -> list[dict[str, Any]]:
     stamp = when.isoformat(timespec="seconds")
+    if hasattr(run, "log_rows"):  # Chain and Estimate write their own lines
+        head = {"date": when.date().isoformat(), "run": stamp, "mode": run.mode, "difficulty": run.board}
+        return [{**head, **row} for row in run.log_rows()]
     return [{
         "date": when.date().isoformat(), "run": stamp, "mode": run.mode, "difficulty": run.board,
         "level": a.problem.level, "family": a.problem.family, "subtype": a.problem.subtype, "outcome": a.outcome,
@@ -36,11 +47,16 @@ def problem_records(run: Any, when: datetime) -> list[dict[str, Any]]:
 
 
 def run_record(run: Any, when: datetime) -> dict[str, Any]:
-    return {
+    record = {
         "date": when.date().isoformat(), "ts": when.isoformat(timespec="seconds"), "mode": run.mode,
         "difficulty": run.board, "seed": run.seed, "correct": run.correct, "skipped": run.skipped,
-        "wrong": run.wrong, "points": run.points, "best_combo": str(run.best_combo),
+        "wrong": run.wrong, "points": json_number(run.points), "best_combo": str(run.best_combo),
     }
+    if getattr(run, "focus", None):
+        record["focus"] = run.focus
+    if hasattr(run, "summary"):
+        record.update(run.summary())
+    return record
 
 
 def log_run(run: Any, when: datetime | None = None) -> None:
@@ -138,13 +154,13 @@ def slowest(attempts: list[Attempt], n: int = 3) -> list[Attempt]:
 
 def drill_pool(rows: list[SubtypeRow], attempts: list[Attempt] | None = None) -> list[tuple[str, ...]]:
     """The drill's problem pool: the run's two weakest subtypes — with `attempts`, each at the difficulty it was
-    seen at (Zetamac's arithmetic drills at MEDIUM)."""
+    seen at (an adaptive level at its nearest anchor; Zetamac's arithmetic drills at MEDIUM)."""
     pool = []
     for r in weakest(rows):
         if attempts is None:
             pool.append((r.family, r.subtype))
             continue
-        level = next(a.problem.level for a in attempts if a.problem.subtype == r.subtype)
+        level = anchor_of(next(a.problem.level for a in attempts if a.problem.subtype == r.subtype))
         pool.append((r.family, r.subtype, level if level in LEVELS else MEDIUM))
     return pool
 
@@ -175,12 +191,13 @@ def build_report(run: Any, history: list[dict[str, Any]], runs: list[dict[str, A
 
 
 def best_fields(mode: str) -> tuple[str, ...]:
-    return {ZETAMAC: ("raw",), OPTIVER: ("net",)}.get(mode, ("correct", "points"))
+    return {ZETAMAC: ("raw",), OPTIVER: ("net",), CHAIN: ("length", "points"), ESTIMATE: ("points",),
+            FLOW: ("correct",), PROB_DRILL: ("correct",)}.get(mode, ("correct", "points"))
 
 
-def run_values(run: Any) -> dict[str, int]:
-    return {"correct": run.correct, "points": run.points, "raw": run.correct,
-            "net": run.correct - run.wrong}
+def run_values(run: Any) -> dict[str, int | float]:
+    return {"correct": run.correct, "points": json_number(run.points), "raw": run.correct,
+            "net": run.correct - run.wrong, "length": getattr(run, "length", 0)}
 
 
 def best_key(mode: str, difficulty: str) -> str:
@@ -214,10 +231,23 @@ def record_bests(run: Any, when: datetime | None = None) -> list[str]:
 
 
 def file_run(run: Any, when: datetime | None = None) -> tuple[Report, list[str]]:
-    """At the end of a run: log it, build its report against the history from before it, and file its bests."""
+    """At the end of a run: log it, build its report against the history from before it, file its bests, and
+    (adaptive) save where its levels ended up."""
     before = load_history()
     log_run(run, when)
+    if getattr(run, "ladder", None) is not None:
+        adaptive.save_levels(run.ladder.levels, (when or datetime.now()).date())
     return build_report(run, before, load_runs()), record_bests(run, when)
+
+
+def file_arcade(run: Any, when: datetime | None = None) -> tuple[list[str], list[dict[str, Any]]]:
+    """At the end of a Chain, Estimate or Probability drill run: log it, file its bests and (adaptive) save its
+    levels. Returns (bests beaten, the last 5 runs on this mode × difficulty, this one included)."""
+    log_run(run, when)
+    if getattr(run, "ladder", None) is not None:
+        adaptive.save_levels(run.ladder.levels, (when or datetime.now()).date())
+    beaten = record_bests(run, when)
+    return beaten, last_runs(load_runs(), run.mode, run.board)
 
 
 def lifetime(history: list[dict[str, Any]]) -> list[tuple[str, int, int, Fraction | None]]:

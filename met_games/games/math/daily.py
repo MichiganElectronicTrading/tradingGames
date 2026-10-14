@@ -13,7 +13,7 @@ from zoneinfo import ZoneInfo
 
 from met_games import storage
 from met_games.games.math import daily_v1
-from met_games.games.math.config import DAILY, OPTIVER, ZETAMAC
+from met_games.games.math.config import DAILY, FLOW, OPTIVER, ZETAMAC
 from met_games.games.math.problems import FAMILIES, FAMILY_LABELS, MEDIUM, Problem
 from met_games.games.math.run import ListStream, Run
 
@@ -154,10 +154,12 @@ def run_card(run: Any) -> str:
         head, score = "zetamac 120s", f"{run.correct} ✓ · raw score"
     elif run.mode == OPTIVER:
         head, score = "optiver-style 80/8", f"{run.correct} ✓ · {run.wrong} ✗ · net {run.correct - run.wrong:+d}"
+    elif run.mode == FLOW:
+        head, score = "flow-style 60/6", f"{run.correct} ✓ · {run.wrong} ✗ of 60 · unofficial practice format"
     else:
         head, score = f"{run.mode} {run.board[0].upper()}", score_line(run.correct, run.points, run.best_combo)
     cmd = f"met-games math --mode {run.mode}"
-    if run.mode not in (ZETAMAC, OPTIVER) and run.board in ("easy", "medium", "hard"):
+    if run.mode not in (ZETAMAC, OPTIVER, FLOW) and run.board in ("easy", "medium", "hard"):
         cmd += f" --difficulty {run.board}"
     return "\n".join([f"MET MATH · {head} · seed {run.seed}", score, *family_lines(family_accuracy(run.attempts)),
                       f"{cmd} --seed {run.seed}"])

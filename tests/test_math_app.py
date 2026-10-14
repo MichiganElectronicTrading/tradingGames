@@ -13,7 +13,7 @@ from met_games.games.math.screens.daily import DailyScreen
 from met_games.games.math.screens.lobby import MathLobby
 from met_games.games.math.screens.play import OptiverScreen, RunScreen
 from met_games.games.math.screens.report import ReportScreen, TipsScreen
-from met_games.games.math.screens.stats import StatsScreen, bests_table
+from met_games.games.math.screens.stats import StatsScreen
 from met_games.widgets import TopBar
 
 SIZE = (150, 50)
@@ -232,10 +232,10 @@ async def test_lobby_keys_difficulty_mix_custom_and_stats():
         assert lobby.families == ["desk"]
         await pilot.press("1")
         assert lobby.families == ["core", "desk"]
-        await pilot.press("down")  # SURVIVAL
-        await pilot.press("down")  # skips the "soon" rows and the section title to ZETAMAC
+        await pilot.press("down", "down", "down")  # SURVIVAL, CHAIN, ESTIMATE
+        await pilot.press("down")  # skips the section title to ZETAMAC
         assert lobby.mode == "zetamac"
-        await pilot.press("up", "up", "enter")  # SPRINT with CUSTOM → the Custom screen
+        await pilot.press("up", "up", "up", "up", "enter")  # SPRINT with CUSTOM → the Custom screen
         await pilot.pause()
         custom = app.screen
         assert isinstance(custom, MathCustomScreen) and custom.duration == 120
@@ -250,14 +250,16 @@ async def test_lobby_keys_difficulty_mix_custom_and_stats():
         assert isinstance(app.screen, ReportScreen)
         await pilot.press("l")
         await pilot.pause()
-        await pilot.press(*["down"] * 5)  # SURVIVAL, ZETAMAC, OPTIVER-STYLE, DAILY, MY STATS
+        # SURVIVAL, CHAIN, ESTIMATE, ZETAMAC, OPTIVER-STYLE, FLOW-STYLE, PROBABILITY DRILL, DAILY, MY STATS
+        await pilot.press(*["down"] * 9)
         assert lobby.item[1] == "stats"
         await pilot.press("enter")
         await pilot.pause()
         assert isinstance(app.screen, StatsScreen)
-        table = bests_table()
-        assert table.columns[0]._cells == ["SPRINT"] and table.columns[1]._cells == ["custom"]
-        assert table.columns[2]._cells == ["1"]
+        stats = app.screen
+        assert stats.query_one("#stats-top", TopBar).round_text.startswith("1 run · since ")
+        await pilot.press("down", "down")  # MEDIUM → HARD → CUSTOM
+        assert stats.difficulty == "custom" and "correct: 0 → 0 → 0" in text_of(stats, "#spark")
 
 
 async def test_cli_mode_and_difficulty_start_the_run():
@@ -282,7 +284,7 @@ async def test_custom_survival_edits_the_bonus():
     app, clock = make_app("math")
     async with app.run_test(size=SIZE) as pilot:
         await pilot.pause()
-        await pilot.press("right", "right", "right", "down", "enter")  # CUSTOM · SURVIVAL
+        await pilot.press("right", "right", "down", "enter")  # CUSTOM · SURVIVAL
         await pilot.pause()
         custom = app.screen
         assert isinstance(custom, MathCustomScreen) and custom.rows[0] == "bonus" and "floor" not in custom.rows

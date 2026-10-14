@@ -68,3 +68,167 @@ ETF Arb: Price a basket of stocks and race 3 traders to trade the ETF when it dr
 Hi/Lo: Call the next card higher or lower (or red or black) and size each even-money bet by the Kelly criterion, against the clock
 
 Math: Mental math drills with exact answers: arcade sprints, Zetamac and Optiver-style test drills, a weakness report, and a daily challenge
+
+## Mental Math v2
+
+```bash
+met-games math --mode chain                            # also: estimate, sprint, survival, zetamac, optiver, flow, prob
+met-games math --mode sprint --difficulty adaptive     # adaptive is for sprint, survival and prob
+```
+
+The lobby has three sections. **ARCADE** holds Sprint, Survival, Chain and Estimate. **TEST DRILLS** holds Zetamac, Optiver-style, Flow-style and the Probability drill. **MORE** holds the daily, My Stats and Quit. Every entry is live. The difficulty pills show only what the selected mode supports. **S** opens My Stats.
+
+### Adaptive: tracks and levels
+
+Every problem type belongs to one of seven skill tracks. The map lives in `ladder.SUBTYPE_TRACK`:
+
+| track | subtypes | target time |
+|---|---|---|
+| addsub | add, sub | 2.5s |
+| mul | mul | 3s |
+| div | div | 3.5s |
+| dec | decimal → fraction, decimal × integer | 4.5s |
+| frac | fraction → decimal, fraction ± fraction, fraction ± decimal | 5s |
+| pct | % of, % change, chained %, reverse % | 5s |
+| desk | P&L, spread, notional, VWAP | 8s |
+
+Each track has its own level from 1 to 10. L3, L6 and L9 are the EASY, MEDIUM and HARD generators, and they produce exactly the same draws. L1–2 are easier than EASY and L10 is harder than HARD. The rungs in between step up operand sizes and digit counts, and each one stays within the next anchor's step limit.
+
+The rule works per track, within a run:
+
+- **Up one level** after 3 correct answers in a row, each within the target time.
+- **Down one level** after a miss or skip, or after 2 correct answers in a row that are slower than twice the target.
+- Any level change resets both counters.
+
+Levels are saved in `~/.met_games/math_levels.json`, with one snapshot per day kept for 60 days. The first time a track is used, it starts at the highest anchor (L3, L6 or L9) where you have at least 80% accuracy over at least 20 logged problems at that difficulty. Otherwise it starts at L3.
+
+Adaptive Sprint and Survival keep their own bests (`sprint/adaptive`, `survival/adaptive`). Adaptive Survival uses MEDIUM's clock. The daily never uses Adaptive.
+
+### Chain
+
+A chain starts from a random number. Each link applies one operation to the carry, and your answer becomes the new carry. Type the answer and press Enter; nothing locks automatically. A wrong answer, or running out of time on the step clock, ends the chain. The step clock stops while the pause menu is open.
+
+| | carry | step clock | operations |
+|---|---|---|---|
+| EASY | ≤ 3 digits | 15s | ± 1–2 digits, × 2–9, exact ÷ 2–9 |
+| MEDIUM | ≤ 4 digits | 12s | adds × and ÷ up to 12, and ± 10/20/25/50% when the result is whole |
+| HARD | ≤ 4 digits | 10s | × and ÷ up to 19, any whole % with a whole result; the carry and log hide after your first answer |
+
+The carry is always a positive whole number. If an operation would break that, the generator draws a new one rather than clamping the result.
+
+- **Points:** each link scores round(base × combo). The base is 100, or 150 for a % link, and combo = min(1 + 0.1 × links so far, 3).
+- **Bests:** longest chain and points, per difficulty.
+- **Custom:** a step clock of 5–20s, plus on/off toggles for ×, ÷ and %.
+- **Report:** length, points, average step time, your last 5 runs, the full chain log, and a BROKE AT panel with the tip for that link's track.
+- **History:** each link is logged with mode `chain` and its track (± → addsub, × → mul, ÷ → div, % → pct).
+
+### Estimate scoring
+
+Estimate is 15 questions with 15 seconds each: three each of big ×, ÷ by a decimal, x% of y, √ of a non-square, and a 4-digit number × 0.0xxx. Type a number (commas are ignored) and press Enter. The exact answers are computed with `Decimal`, with ÷ and √ rounded to 8 places, and they are never round numbers.
+
+- Your answer is scored on off = |guess − exact| / |exact|:
+  - within 1%: 100 (FULL)
+  - within 5%: 50 (HALF)
+  - within 10%: 25 (QUARTER)
+  - otherwise 0 (MISS)
+
+  Each limit counts as inside its band.
+- Answering within 4s doubles the points, and within 8s multiplies them by 1.5. A timeout scores 0, and there is no combo.
+- **Bests:** points, per difficulty.
+- **History:** logged as family `est`, which stays out of the skill tracks.
+
+### My Stats
+
+←→ picks the mode and ↑↓ picks the difficulty. The top bar shows your total runs, the date of your first run, and your daily streak.
+
+- **Last 20 runs:** a ▁–█ sparkline scaled to its own minimum and maximum, followed by first → median → latest. The stat shown is correct answers for Sprint, Survival and Zetamac, net for Optiver-style, length for Chain, and points for Estimate.
+- **Median time per family:** your first 10 runs against your last 10, across all modes. It shows "—" until you have 20 runs.
+- **Adaptive levels:** every track's level, with ▲ ▼ · against the snapshot from 7 days ago.
+- **Bests:** each mode at the hardest difficulty where you have a best, with its date.
+- **Focus next:** the track with the biggest 7-day level drop. If nothing dropped, it is the track with the lowest accuracy over your last 100 problems. **F** starts a 2:00 adaptive Sprint on that track only. It is logged and moves your levels, but never counts toward bests.
+
+### Flow-style 60/6 (unofficial practice format)
+
+Flow-style is an unofficial practice format, not any firm's real test, and it makes no claims about real cutoffs.
+
+- **Format:** 60 questions in 6:00, mixing core arithmetic with decimals and fractions at MEDIUM–HARD.
+- **Answering:** type the answer and press Enter; nothing locks automatically. An empty Enter skips. A wrong answer still moves on, and there's no going back.
+- **No feedback until the end:** the header shows how many you've answered, but ✓, ✗ and SCORE stay hidden ("?") until the report.
+- **Pace panel:** your seconds per question against the pace you need (time left ÷ questions left). It's green when you're at or under that pace, red otherwise.
+- **Pausing:** Esc hides the board, but the clock keeps running, as in a real test.
+- **Score and bests:** the score is the number correct, and the best is your highest correct count.
+- **Report:** all 60 rows (question, your answer, the right answer and your time), with wrong answers highlighted. Below them come the usual weakness report, slowest 3 and shortcut.
+
+### Probability drill and the `prob` family
+
+The drill is 20 questions in 10:00. Type an answer and press Enter, or press S to skip. Right after each answer you see ✓, or ✗ with the right answer. A WHY panel shows that problem's explanation until your next answer, plus a note when your wrong answer matches a known mistake. The difficulties are EASY, MEDIUM, HARD and ADAPTIVE. Bests are the number correct per difficulty. The report shows your score, accuracy per subtype, and every miss with its explanation.
+
+`prob` is a problem family worth 200 base points. It appears only in this drill, never in Sprint, Survival, Chain or the daily.
+
+| | EASY | MEDIUM | HARD |
+|---|---|---|---|
+| dice | one die | two dice: sums, doubles, higher/lower die, at least one X in 2 rolls | at least one X in up to 4 rolls |
+| cards (counting) | 2-card hands, ordered 2-card draws, both hearts, both aces, one heart and one spade | all 5-card hands, 3 cards with exactly one ace, 3 cards of one suit, 5 cards of one suit, 5 cards with no aces, ordered 3-card draws | full house, four of a kind, two pair, exactly one pair, three of a kind (no full house), at least one ace, exactly two suits, five different ranks |
+| coins | all heads in ≤ 3 flips | exactly k / at least one, n ≤ 4 | n ≤ 6, plus runs ("3 or more heads in a row") |
+| ev | coin and card bets | E of a die, a die × $m | E of the higher/lower of two dice, E of face², pay-to-play games, fair prices |
+| cond | — | — | "given at least one 6, P(both 6)", coins, cards |
+
+**Card questions are counting questions.** Every card question asks "How many …" and wants a whole number of ways. The wording always says whether order matters ("order doesn't matter" for a hand, "order matters" for a draw). It spells out what counts instead of using a poker name with hidden exclusions, e.g. "all five the same suit (straight flushes included)". The rank, suit, number of cards (2–3) and "exactly k" vs "at least one" are drawn at random. Type a whole number, with or without commas ("2,598,960"). Fractions, decimals and the decimal tolerance below don't apply. The SO FAR log and the report print counts with thousands separators. Their subtype is `cards_count`. Before this change it was `cards`, and those were probability questions; old history lines keep `cards`, so the two never mix in the stats.
+
+**Answer tolerance.** Every other answer is a reduced fraction. A fraction is accepted in any equivalent form (2/12 for 1/6). A decimal is accepted when it is exactly equal ("0.75" for 3/4), or when it has at least 3 decimal places and is within 0.0005 of the exact answer ("0.167" for 1/6, but not "0.17"). This is the only tolerance in Mental Math, and it lives in one function, `prob.close_enough`.
+
+**Explanations and mistakes.** Every problem carries a 2–3 line explanation built from its own numbers (for example "13 × C(4,3) × 12 × C(4,2) = 13 × 4 × 12 × 6 = 3,744" or "C(52,5) − C(48,5) = 2,598,960 − 1,712,304 = 886,656"). Known wrong answers are recognised and explained in one line:
+
+- adding P(at least one) roll by roll instead of 1 − P(none);
+- a missing order count for coins (C(n, k));
+- an off-by-one dice sum (the count for s ± 1);
+- counting: ordered vs unordered (the answer × k!, or ÷ k! for draws in order);
+- counting: two pair with 13 × 12 rank orderings instead of C(13,2) (2× the answer);
+- counting: "at least one ace" as 4 × C(51,4);
+- counting: one pair with C(48,3) for the other three cards, which lets them pair up;
+- counting: three of a kind that includes the 3,744 full houses.
+
+**Adaptive.** `prob` has its own ten-level track. L3, L6 and L9 are EASY, MEDIUM and HARD; L1–2 are easier and L10 adds 3-dice sums, up to 8 coins, E of the highest of 3 dice and more conditional problems. It uses the same up/down rule as the other tracks, with a 15s target.
+
+### Decisions
+
+- **The dec / frac split:** the decimals-and-fractions subtypes are divided by what you start from. Decimal → fraction and decimal × integer are `dec`; fraction → decimal, fraction ± fraction and fraction ± decimal are `frac`. This puts subtypes on both tracks at every anchor.
+- **Track choice:** an adaptive run picks families from the same shuffled bags as Sprint, then picks one of that family's tracks evenly. So addsub gets a third of core, not half.
+- **Operand size:** "operand size" means the most significant digits of any number in the problem text (0.375 → 3, 300 → 1). Each track declares that reach per level (`ladder.DIGITS`). The reach never goes down, and the anchor levels match exactly what today's generators reach.
+- **Edge cases of the rule:**
+  - An answer slower than the target but within twice the target breaks both runs.
+  - At L1 or L10 a firing rule changes nothing, but it still resets the counters.
+  - A track missing from the levels file is seeded once and saved, so later history doesn't move it.
+- **7-day comparison:** arrows compare against the latest snapshot at least 7 days old. Until one exists, they compare against the oldest snapshot.
+- **Weakness drill:** D on a report drills an adaptive problem at its nearest anchor (L1–4 EASY, L5–7 MEDIUM, L8–10 HARD).
+- **Chain start number:** 10–99 on EASY, 10–999 on MEDIUM and HARD.
+- **Chain % links:** a % link reads "480 + 25%". Its tip covers the p% of the carry, then adds or subtracts it.
+- **Chain Custom:** Custom uses MEDIUM's limits. ± is always on, because without it a chain could run out of valid moves (for example, a prime carry with only ÷ left).
+- **Chain timeouts:** a timeout is logged as outcome `timeout`. In the run summary it is the "skipped" count.
+- **Estimate difficulty:** Estimate has no Custom; its pills are EASY, MEDIUM and HARD.
+- **Estimate operands:** "digits" means significant digits.
+  - EASY: 3-digit × 2-digit whole numbers.
+  - MEDIUM: 4 significant digits with 1 decimal place (482.7).
+  - HARD: 4–5 significant digits with 2–3 places (48.217), with √ of 5-digit numbers.
+  - The × 0.0xxx kind always uses a 4-digit number in that difficulty's style.
+- **Estimate answers:** exact answers are at least 1, and "round" means fewer than 3 significant digits.
+- **Half points:** 25 × 1.5 gives half points (37.5). They are kept exactly and stored as JSON numbers, which hold halves exactly.
+- **Sparkline:** if every value is equal, it draws a flat middle line (▄).
+- **Bests panel:** "best difficulty" means the hardest one with a best on file, in the order HARD, MEDIUM, EASY, ADAPTIVE, CUSTOM.
+- **Median-time panel:** it covers the four problem families; Estimate's lines aren't included.
+- **Report keys:** L on any report now goes to the math lobby, even when the run started from My Stats.
+- **Prob outside FAMILIES:** `prob` stays out of `FAMILIES` and the v2a track list, so Sprint's mix toggles, the daily and Sprint/Survival adaptive runs can never draw it. The prob level is saved in the same `math_levels.json`, and saving one set of levels leaves the others alone. My Stats lists it with the other levels, but Focus next only names Sprint/Survival tracks, since F starts a Sprint-style drill.
+- **Prob target time:** 15s per question, which is "fast" for the up rule.
+- **Prob ladder:** in the prob ladder, a problem's level and kind fix its setup ("2 cards from 52"). The tests check every answer by brute force over real dice, coin sequences and a 52-card deck, never the generator's formula.
+- **EASY coins:** "one coin" means one coin flipped 2–3 times (all heads). A single flip would always be 1/2.
+- **Prob subtypes:** conditional probability appears only at HARD (L9) and above. HARD contains every subtype.
+- **Mistake matching:** a known mistake is matched with the same tolerance as answers, so "0.006" is recognised as (1/13)² = 0.00592 with replacement. A "mistake" that happens to equal the right answer is dropped for that problem.
+- **Flow-style problems:** Flow-style draws core and decfrac problems from alternating shuffled bags, each at MEDIUM or HARD at random, so there are 30 of each. Answers are checked exactly, using the same rules as the arcade modes.
+- **Flow-style header:** ✓, ✗ and SCORE show as "?" during the run. The spec asks for them in the header but also asks for no feedback until the end.
+- **Flow-style leaving:** pausing doesn't stop the clock. Leaving from the menu abandons the test, like any other mode.
+- **Probability drill input:** an Enter on text that isn't a number yet (like "1/") does nothing, and S is the only way to skip.
+- **Lobby navigation:** with Flow-style and Probability drill live, ↓ from Survival now stops on every mode. Two v2a lobby tests counted rows, so I updated just those assertions.
+- **Counting answers:** a counting answer must be a plain whole number. Commas are allowed only between groups of three ("1,326", not "13,26"). Anything else ("1326.0", "1/1") does nothing on Enter, the same as a half-typed fraction; S skips.
+- **One-pair detector:** the spec's one-pair mistake ("forgetting that the 3 kickers have different ranks") is the count 13 × C(4,2) × C(48,3) = 1,349,088. C(12,3) × 4³ is the right kicker term, so the detector fires on the C(48,3) version.
+- **Card ladder:** L1–2 hold the 2-card hand questions. L4–5 add 2–3-card counts, with 5-card hands from L5. L7–8 move into 5-card hands (four of a kind, five different ranks, at least one of a rank, full house, three of a kind). L10 adds "exactly 3 of a rank".
+- **Brute-force tests:** the 5-card tests enumerate all 2,598,960 hands once and count rank-specific and suit-specific cases for aces and hearts. Every rank and suit gives the same count by symmetry.

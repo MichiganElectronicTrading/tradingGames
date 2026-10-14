@@ -12,12 +12,13 @@ from textual.screen import Screen
 from textual.widgets import Static
 
 from met_games.games.math import daily
-from met_games.games.math.config import DAILY, DRILL, OPTIVER, ZETAMAC
+from met_games.games.math.config import DAILY, DRILL, FLOW, OPTIVER, ZETAMAC
 from met_games.games.math.history import drill_pool, file_run
 from met_games.games.math.problems import SUBTYPE_LABELS
-from met_games.games.math.run import SKIPPED, WRONG, OptiverRun, new_drill
+from met_games.games.math.run import SKIPPED, WRONG, OptiverRun, new_drill, new_focus_drill
 from met_games.games.math.screens.common import big, crumb, play_screen, run_seed, secs, start_run
 from met_games.games.math.tips import SUBTYPE_TIPS, TIPS, render
+from met_games.pause import to_lobby
 from met_games.widgets import AMBER, DIM, GREEN, RED, TITLE, KeyBar, TitledPanel, TopBar
 
 WEAK_STYLE = "bold #FFFFFF on #7A1F1F"
@@ -73,6 +74,8 @@ class ReportScreen(Screen):
                 yield TitledPanel(self.score_title(), Static(self.score_tile()), classes="tile")
                 yield TitledPanel("AVG TIME", Static(self.avg_tile()), classes="tile")
                 yield TitledPanel("LAST 5 RUNS", Static(self.last_runs_tile()), classes="tile")
+            if r.mode == FLOW:
+                yield TitledPanel(f"ALL {len(r.questions)}", Static(self.flow_table(), id="flow-rows"), double=True)
             yield TitledPanel("WEAKNESS REPORT", Static(self.weakness_table()), double=True)
             with Horizontal(id="lower"):
                 with Vertical(id="lower-left"):
@@ -87,18 +90,22 @@ class ReportScreen(Screen):
         r = self.run
         out = big(str(r.correct), f"bold {GREEN}")
         out.append(f"\n{r.skipped} skipped", style=DIM)
-        if isinstance(r, OptiverRun):
+        if isinstance(r, OptiverRun) or r.mode == FLOW:
             out.append(f" · {r.wrong} wrong", style=RED if r.wrong else DIM)
         return out
 
     def score_title(self) -> str:
-        return {ZETAMAC: "RAW SCORE", OPTIVER: "NET"}.get(self.run.mode, "POINTS")
+        return {ZETAMAC: "RAW SCORE", OPTIVER: "NET", FLOW: "SCORE"}.get(self.run.mode, "POINTS")
 
     def score_tile(self) -> Text:
         r = self.run
         if r.mode == ZETAMAC:
             out = big(str(r.correct), f"bold {AMBER}")
             out.append("\nraw score · no points", style=DIM)
+            return out
+        if r.mode == FLOW:
+            out = big(str(r.correct), f"bold {AMBER}")
+            out.append(f"\nof {len(r.questions)} · unofficial practice format", style=DIM)
             return out
         if r.mode == OPTIVER:
             out = big(f"{r.net}", f"bold {AMBER}")
@@ -125,6 +132,8 @@ class ReportScreen(Screen):
                 score = f"net {x['correct'] - x.get('wrong', 0):+d}"
             elif x["mode"] == ZETAMAC:
                 score = f"{x['correct']} raw"
+            elif x["mode"] == FLOW:
+                score = f"{x['correct']} ✓ of 60"
             else:
                 score = f"{x['correct']} ✓ · {x.get('points', 0):,} pts"
             out.append(score, style=f"bold {AMBER}" if i == 0 else "")
@@ -141,6 +150,20 @@ class ReportScreen(Screen):
         for r in rows:
             t.add_row(r.label, str(r.seen), f"{100 * r.right // r.seen}%", secs(r.avg_ms), secs(r.usual_ms), r.vs,
                       style=WEAK_STYLE if r.subtype in weak else None)
+        return t
+
+    def flow_table(self) -> Table:
+        """Every question: what you typed, the answer and your time; wrong answers highlighted."""
+        r = self.run
+        t = _table("#", "QUESTION", "YOU", "ANSWER", "TIME", right=("#", "YOU", "ANSWER", "TIME"))
+        for i, p in enumerate(r.questions):
+            a = r.attempts[i] if i < len(r.attempts) else None
+            if a is None:
+                t.add_row(str(i + 1), p.text, "—", p.answer_text, "—", style=DIM)
+                continue
+            you = "skipped" if a.outcome == SKIPPED else a.given
+            t.add_row(str(i + 1), p.text, you, p.answer_text, secs(a.ms),
+                      style=WEAK_STYLE if a.outcome == WRONG else (DIM if a.outcome == SKIPPED else None))
         return t
 
     def slowest_text(self) -> Text:
@@ -184,6 +207,9 @@ class ReportScreen(Screen):
             self.app.bell()
             self.notify("one daily attempt per day — come back tomorrow", severity="warning")
             return
+        if getattr(r, "focus", None):
+            self.app.switch_screen(play_screen(new_focus_drill(run_seed(self.app), r.focus)))
+            return
         if r.mode == DRILL:
             pool = sorted({(a.problem.family, a.problem.subtype, a.problem.level) for a in r.attempts})
             if pool:
@@ -203,7 +229,7 @@ class ReportScreen(Screen):
             self.notify(card, title="pbcopy not found — your card:", timeout=20)
 
     def action_lobby(self) -> None:
-        self.app.pop_screen()
+        to_lobby(self.app)
 
 
 class TipsScreen(Screen):

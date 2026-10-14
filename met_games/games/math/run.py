@@ -11,7 +11,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from fractions import Fraction
 
-from met_games.games.math.config import DRILL, OPTIVER, SPRINT, STANDARD, SURVIVAL, ZETAMAC, MathConfig
+from met_games.games.math.adaptive import AdaptiveStream, Ladder, load_levels
+from met_games.games.math.config import ADAPTIVE, DRILL, OPTIVER, SPRINT, STANDARD, SURVIVAL, ZETAMAC, MathConfig
 from met_games.games.math.optiver import Question, optiver_questions
 from met_games.games.math.problems import ALLOWED, Problem, ProblemStream, ZetamacStream, accepts
 
@@ -76,8 +77,10 @@ class Run:
                  scored: bool = True, config: MathConfig | None = None) -> None:
         self.mode, self.stream, self.board, self.seed, self.scored = mode, stream, board, seed, scored
         self.config = config
+        self.ladder: Ladder | None = getattr(stream, "ladder", None)  # adaptive runs: the levels, moving
         self.day = None  # the daily's date
         self.ended_early = False  # ended before its clock ran out (Ctrl+E, or leaving the daily)
+        self.focus: str | None = None  # a focus drill's track
         self.survival = mode == SURVIVAL
         self.bonus_start_ms, self.bonus_floor_ms = (config or MathConfig(mode=mode)).survival_bonus()
         self.bank_ms = SURVIVAL_START_MS if self.survival else duration_ms
@@ -140,6 +143,9 @@ class Run:
         if self.survival:
             self.bank_ms += self.bonus_ms if outcome == CORRECT else -SKIP_PENALTY_MS
         self.attempts.append(attempt)
+        observe = getattr(self.stream, "observe", None)  # adaptive: the level moves before the next problem
+        if observe is not None:
+            observe(attempt)
         if outcome == CORRECT:
             self.best_combo = max(self.best_combo, combo(streak))
             self.streak += 1
@@ -259,8 +265,10 @@ class OptiverRun:
         return avg, need
 
 
-def new_run(config: MathConfig, seed: int, pool: list[tuple[str, str]] | None = None) -> Run | OptiverRun:
-    """A run for `config` (Sprint, Survival, Zetamac, Optiver-style or Drill) on this seed."""
+def new_run(config: MathConfig, seed: int, pool: list[tuple[str, str]] | None = None,
+            levels: dict[str, int] | None = None) -> Run | OptiverRun:
+    """A run for `config` (Sprint, Survival, Zetamac, Optiver-style or Drill) on this seed. Adaptive runs start
+    from `levels` (default: the saved ones)."""
     config.validate()
     if config.mode == OPTIVER:
         return OptiverRun(seed)
@@ -270,7 +278,10 @@ def new_run(config: MathConfig, seed: int, pool: list[tuple[str, str]] | None = 
     if config.mode == DRILL:
         stream = ProblemStream(seed, levels=config.level_map(), pool=pool)
         return Run(DRILL, stream, duration_ms=DRILL_MS, board=config.board, seed=seed, config=config)
-    stream = ProblemStream(seed, config.families, config.level_map(), config.weight_map())
+    if config.difficulty == ADAPTIVE:
+        stream = AdaptiveStream(seed, load_levels() if levels is None else levels, config.families)
+    else:
+        stream = ProblemStream(seed, config.families, config.level_map(), config.weight_map())
     duration = config.duration_s * 1000 if config.mode == SPRINT else 0
     return Run(config.mode, stream, duration_ms=duration, board=config.board, seed=seed, config=config)
 
@@ -278,6 +289,14 @@ def new_run(config: MathConfig, seed: int, pool: list[tuple[str, str]] | None = 
 def new_drill(seed: int, pool: list[tuple[str, str, str]], board: str) -> Run:
     """D on the report: a 2:00 Sprint on the run's weakest subtypes, each at the difficulty it was seen at."""
     return Run(DRILL, ProblemStream(seed, pool=pool), duration_ms=DRILL_MS, board=board, seed=seed)
+
+
+def new_focus_drill(seed: int, track: str, levels: dict[str, int] | None = None) -> Run:
+    """F on MY STATS: a 2:00 adaptive Sprint on one track. Logged (and it moves your levels), never a best."""
+    stream = AdaptiveStream(seed, load_levels() if levels is None else levels, tracks=(track,))
+    run = Run(DRILL, stream, duration_ms=DRILL_MS, board=ADAPTIVE, seed=seed)
+    run.focus = track
+    return run
 
 
 def new_seed() -> int:
