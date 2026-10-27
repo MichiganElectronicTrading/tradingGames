@@ -68,8 +68,7 @@ class HomeScreen(Screen):
                 row = Text(f"{g.title:<14}", style="bold")
                 row.append(g.tagline, style=DIM)
                 rows.append(row)
-            rows += [None, Text(f"{'SETTINGS':<14}", style="bold").append("display and more", style=DIM),
-                     Text("QUIT", style="bold")]
+            rows += [None, Text("SETTINGS", style="bold"), Text("QUIT", style="bold")]
             yield TitledPanel("GAMES", RowList(rows, id="game-list"), double=True, id="games")
         yield KeyBar([("↑↓", "move"), ("⏎", "open"), ("Q", "quit")])
 

@@ -1,14 +1,52 @@
-# MET Trading Games — Michigan Electronic Trading
+# MET Games — Michigan Electronic Trading
 
-Solo trading drills for **MET (Michigan Electronic Trading)**, in your terminal.
+Solo trading and mental-math drills for **MET (Michigan Electronic Trading)**, played in your terminal.
 
-There are three games. Card and Dice are market-taking drills built on the same core:
+`met-games` is a [Textual](https://textual.textualize.io/) app containing seven games that practise the skills tested in trading interviews and used on a desk. These are pricing under uncertainty, making and taking markets, reacting to a live order book, arbitrage, bet sizing, and fast exact arithmetic. Every game is seeded, so a club can play identical sessions and compare results.
 
-- **Card Game**: cards are dealt from a deck and prices are whole dollars.
-- **Dice Game**: dice are rolled and prices move in **0.25 ticks**.
-- **Trading Game**: a market-making drill. You and three computer traders take turns making two-way markets on one deal of cards; see [Trading Game](#trading-game).
+## The games
 
-In Card and Dice, some items are face up. A market maker quotes a two-way price on the sum of all of them, and you buy, sell, or pass before the timer runs out. After the reveal you report your own P&L. The game then grades your decision on **edge** (was it a good trade at the time?) separately from **luck** (how the draw went).
+| game | CLI key | home-screen tagline | what you practise |
+|---|---|---|---|
+| **Card Game** | `card` | Card Expected Value | Taking a market on the sum of dealt cards (whole-dollar prices) |
+| **Dice Game** | `dice` | Smaller Tick Sizing | The same drill on dice, with prices in 0.25 ticks |
+| **Trading Game** | `trade` | You vs. 3-4 Traders | Making two-way markets and trading other players' markets on one deal |
+| **Outcry** | `outcry` | 8-Player Open Outcry | Open outcry in a live order book on a contract that settles at a hidden sum |
+| **ETF Arb** | `etf` | Basket Arbitrage Race | Pricing a basket's NAV and racing to arb the ETF quote |
+| **Hi/Lo** | `hilo` | Kelly Sizing Speed Run | Calling the next card and sizing each bet by the Kelly criterion |
+| **Math** | `math` | Mental Math Sprints | Exact mental arithmetic, estimation, probability and desk math |
+
+Each game has a lobby with EASY / MEDIUM / HARD presets (most also offer CUSTOM), a how-to screen that gives the full rules, a recap or report at the end of a session, and a stats screen that draws on your saved history.
+
+### Card Game and Dice Game
+
+Some cards or dice are dealt face up and the rest are hidden. A market maker quotes a two-way price on the sum of all of them, and you buy, sell, or pass before the timer runs out. Market events can change the rules before the quote, for example face cards count 10, aces count 1, red cards count negative, or one hidden card counts double. After the reveal you report your own P&L. The game then grades your decision on **edge** (was it a good trade at the time?) separately from **luck** (how the draw went). Both games share the `sumgame` core, so they differ only in item type, tick size and events.
+
+### Trading Game
+
+You and three computer traders (DELTA, GAMMA, THETA) sit at a table and play one deal of cards per hand. On turn *i* the player in seat *i* makes a market, and the other three may trade it. Positions and cash carry across the four turns. After turn 4, every position settles at the sum of the cards, so the four hand P&Ls always sum to zero. The deal follows the Card Game's rules (values, events and fair value).
+
+### Outcry
+
+You and seven computer traders each hold one hidden whole number drawn from a hidden range. One contract settles at the sum of all eight numbers. Each round has a forced open quote, a blind forced response, a timed open outcry in a live price-time order book, and then one anonymous reveal. The lowest and highest numbers are revealed at fixed points with labels. The computer traders use hidden styles (MAKER, SNIPER, PASSIVE, CHASER, ANCHOR), and each prices from its own exact conditional fair value. At the end you score your own trades, and then the owners, the true range and the leaderboard are revealed.
+
+### ETF Arb
+
+Each round shows a basket of stocks with fixed weights, a set of price moves, and an ETF bid/ask posted near NAV = Σ weight × price. You work out the NAV and then buy at the ask, sell at the bid, or skip. Three computer traders (KESTREL, OSPREY, MERLIN) race you for the same limited size. Every trade pays a flat fee, and the first profitable trade of the round earns a bonus. Some rounds the gap is too small to be worth trading.
+
+### Hi/Lo
+
+A card is showing. You call whether the next one is higher or lower (or, with the Red/Black deck, which colour it is), and you stake a whole percent of your capital at even money. Each bet is graded against the Kelly stake k = |h − l| ÷ (h + l), with combo multipliers and an optional speed bonus. A capital bonus is added at the end, and your result is compared with a Kelly benchmark run on the same deck order. The decks are Interview (13 cards), Full (52) and Red/Black.
+
+### Mental Math
+
+These are exact-answer drills, grouped in the lobby as follows:
+
+- **ARCADE**: Sprint, Survival, Chain and Estimate.
+- **TEST DRILLS**: Zetamac, Optiver-style, Flow-style 60/6 and a Probability drill.
+- **MORE**: the daily challenge, My Stats and Settings.
+
+Adaptive difficulty tracks your level separately on seven skill tracks. Reports point out your weakest areas and offer a targeted drill. See the [Mental Math reference](#mental-math-reference) below.
 
 ## Install & run
 
@@ -21,25 +59,17 @@ uv tool install .
 met-games
 ```
 
-`python -m met_games` also works inside the venv. Run the tests with `uv run pytest`.
+`python -m met_games` also works inside the venv.
 
-The app opens on the **MET GAMES** home screen, which lists the available games. Press ⏎ on a game to reach its lobby.
+The app opens on the **MET GAMES** home screen, which lists every game plus SETTINGS and QUIT. Press ⏎ on a game to open its lobby. You can also go straight to a lobby:
 
 ```bash
-met-games card              # skip the home screen and open the Card Game lobby
-met-games dice              # ... or the Dice Game lobby
-met-games trade             # ... or the Trading Game lobby
-met-games dice --seed 42    # every session this run uses seed 42
+met-games card                 # or: dice, trade, outcry, etf, hilo, math
+met-games dice --seed 42       # every session this run uses seed 42
+met-games hilo --deck redblack # Hi/Lo: start on a given deck (interview, full, redblack)
+met-games math --mode chain    # Math: start a mode straight away (see the Mental Math reference)
+met-games math --daily         # Math: today's daily challenge
 met-games --help
-```
-
-## Upgrading from mtt-games
-
-This project used to be **mtt-games**, for MTT (Michigan Trading and Technology). It is now **met-games**, for MET (Michigan Electronic Trading). Seeds are unchanged, so `--seed N` deals the same game as before. On first run, your history is copied from `~/.mtt_games` to `~/.met_games`; the old folder is left in place. `MTT_GAMES_HOME` still works if `MET_GAMES_HOME` is unset. To swap the installed command:
-
-```bash
-uv tool uninstall mtt-games
-uv tool install --force --editable .
 ```
 
 ## Club play
@@ -47,27 +77,14 @@ uv tool install --force --editable .
 To run a head-to-head drill, pick a seed and have everyone run the same command:
 
 ```bash
-met-games card --seed 1234      # or: met-games dice --seed 1234 / met-games trade --seed 1234
+met-games card --seed 1234      # works for any game: dice, trade, outcry, etf, hilo, ...
 ```
 
-Everyone then plays the same game and mode. With the same seed, everyone gets identical deals, events, flips and quotes, so the only differences are the decisions people make. When the session ends, compare recaps; each one shows `SEED 1234` in its top bar. FINAL BALANCE shows who made the most money, but EDGE TAKEN is the fairer score, since LUCK is the same draw for everyone. Pressing R on the recap replays the seed for a rematch.
+Everyone must also pick the same game and mode. With the same seed, everyone gets identical deals, events, flips, quotes and computer-trader behaviour, so the only differences are the decisions people make. When the session ends, compare recaps; each one shows `SEED 1234` in its top bar. In Card, Dice and Trading, FINAL BALANCE shows who made the most money, but EDGE TAKEN is the fairer score, since LUCK is the same draw for everyone. Pressing R on the recap replays the seed for a rematch.
 
+## Your data
 
-## The games
-
-Card Game: Trading against a market on hidden card values
-
-Dice: Game: Trading against a market on hidden dice values with smaller tick sizing
-
-Trading Game: Making a market and taking against bot markets on hidden card values
-
-Outcry: Open market outcry across different rounds, trading a contracts hidden true value.
-
-ETF Arb: Price a basket of stocks and race 3 traders to trade the ETF when it drifts from its NAV
-
-Hi/Lo: Call the next card higher or lower (or red or black) and size each even-money bet by the Kelly criterion, against the clock
-
-Math: Mental math drills with exact answers: arcade sprints, Zetamac and Optiver-style test drills, a weakness report, and a daily challenge
+History, bests, adaptive levels and settings are saved under `~/.met_games/`. To use a different folder, set `MET_GAMES_HOME`. Each game writes its own files, for example `card_history.jsonl`, `hilo_scores.json`, `math_levels.json` and `settings.json`. In Card, Dice, Trading, Outcry and ETF Arb, the stats screen's CLEAR STATS button deletes that game's history only, after asking you to confirm.
 
 ## Settings
 
@@ -92,7 +109,7 @@ Math: Mental math drills with exact answers: arcade sprints, Zetamac and Optiver
 - **Answer line:** it uses the biggest size that fits as you type, so a long answer shrinks rather than clipping.
 - **Input is unchanged:** big digits are drawing only. Auto-lock, Enter, timing and parsing all use the raw typed text.
 
-## Mental Math v2
+## Mental Math reference
 
 ```bash
 met-games math --mode chain                            # also: estimate, sprint, survival, zetamac, optiver, flow, prob
@@ -213,7 +230,7 @@ The drill is 20 questions in 10:00. Type an answer and press Enter, or press S t
 
 **Adaptive.** `prob` has its own ten-level track. L3, L6 and L9 are EASY, MEDIUM and HARD; L1–2 are easier and L10 adds 3-dice sums, up to 8 coins, E of the highest of 3 dice and more conditional problems. It uses the same up/down rule as the other tracks, with a 15s target.
 
-### Decisions
+### Design notes
 
 - **The dec / frac split:** the decimals-and-fractions subtypes are divided by what you start from. Decimal → fraction and decimal × integer are `dec`; fraction → decimal, fraction ± fraction and fraction ± decimal are `frac`. This puts subtypes on both tracks at every anchor.
 - **Track choice:** an adaptive run picks families from the same shuffled bags as Sprint, then picks one of that family's tracks evenly. So addsub gets a third of core, not half.
@@ -250,7 +267,7 @@ The drill is 20 questions in 10:00. Type an answer and press Enter, or press S t
 - **Flow-style header:** ✓, ✗ and SCORE show as "?" during the run. The spec asks for them in the header but also asks for no feedback until the end.
 - **Flow-style leaving:** pausing doesn't stop the clock. Leaving from the menu abandons the test, like any other mode.
 - **Probability drill input:** an Enter on text that isn't a number yet (like "1/") does nothing, and S is the only way to skip.
-- **Lobby navigation:** with Flow-style and Probability drill live, ↓ from Survival now stops on every mode. Two v2a lobby tests counted rows, so I updated just those assertions.
+- **Lobby navigation:** with Flow-style and Probability drill live, ↓ from Survival now stops on every mode.
 - **Counting answers:** a counting answer must be a plain whole number. Commas are allowed only between groups of three ("1,326", not "13,26"). Anything else ("1326.0", "1/1") does nothing on Enter, the same as a half-typed fraction; S skips.
 - **One-pair detector:** the spec's one-pair mistake ("forgetting that the 3 kickers have different ranks") is the count 13 × C(4,2) × C(48,3) = 1,349,088. C(12,3) × 4³ is the right kicker term, so the detector fires on the C(48,3) version.
 - **Card ladder:** L1–2 hold the 2-card hand questions. L4–5 add 2–3-card counts, with 5-card hands from L5. L7–8 move into 5-card hands (four of a kind, five different ranks, at least one of a rank, full house, three of a kind). L10 adds "exactly 3 of a rank".
@@ -274,3 +291,38 @@ The drill is 20 questions in 10:00. Type an answer and press Enter, or press S t
 - **Glyph widths:** at LARGE, "." and "," are one column wide and a space is one column. At HUGE they are two columns wide.
 - **Settings timing:** settings are read when a run starts, so a change applies from the next run.
 - **Corrupt settings:** a settings file that isn't a JSON object (a list, broken JSON, non-UTF-8) reads as all defaults. A game section that isn't an object is replaced on the next save.
+
+## Development
+
+```bash
+uv run pytest                  # full test suite
+```
+
+The engines contain no Textual code. They run on a 0.25 s tick counter instead of the wall clock, so the tests can drive whole games instantly and replay seeds exactly. `tests/test_seed_pins.py` pins seeded deals so they can't drift, and `tests/snapshots/` holds recorded screens for the Mental Math NORMAL display.
+
+```
+met_games/
+  __main__.py          CLI entry point (met-games, plus the legacy mtt-games alias)
+  app.py               home screen and the GAMES registry
+  settings.py          settings storage; settings_screen.py draws the Settings screen
+  storage.py           ~/.met_games paths and the mtt → met migration
+  bigtext.py           LARGE / HUGE digit rendering
+  widgets.py, pause.py, theme.tcss   shared UI pieces
+  games/
+    sumgame/           shared core for Card, Dice and Trading (lobby, rounds, recap, stats)
+    card/ dice/ trade/ the sum games
+    outcry/ etf/ hilo/ engine + model + computer traders + screens
+    math/              problem generators, adaptive ladder, modes, daily, screens
+tests/
+```
+
+To add a game, create a new package under `met_games/games/` and add one `GameInfo` line to `GAMES` in `met_games/app.py`. If the game has settings, add a section to `SETTINGS_SECTIONS`.
+
+## Upgrading from mtt-games
+
+This project used to be **mtt-games**, for MTT (Michigan Trading and Technology). It is now **met-games**, for MET (Michigan Electronic Trading). Seeds are unchanged, so `--seed N` deals the same game as before. On first run, your history is copied from `~/.mtt_games` to `~/.met_games`; the old folder is left in place. `MTT_GAMES_HOME` still works if `MET_GAMES_HOME` is unset. The `mtt-games` command still works for now, but it prints a notice and will be removed in a future version. To swap the installed command:
+
+```bash
+uv tool uninstall mtt-games
+uv tool install --force --editable .
+```
