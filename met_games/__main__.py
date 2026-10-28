@@ -6,7 +6,7 @@ import argparse
 
 from rich.console import Console
 
-from met_games import storage
+from met_games import __version__, storage
 from met_games.app import GAMES, METGamesApp
 
 
@@ -18,6 +18,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         # keep the help column where it was before the longer math flags; those wrap onto their own line
         formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=16),
     )
+    parser.add_argument("--version", action="version", version=f"met-games {__version__}")
     parser.add_argument(
         "game", nargs="?", choices=[g.key for g in GAMES], metavar="GAME",
         help="open this game's lobby directly, skipping the home screen (" + ", ".join(g.key for g in GAMES) + ")",

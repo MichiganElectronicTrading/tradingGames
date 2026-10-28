@@ -48,18 +48,37 @@ These are exact-answer drills, grouped in the lobby as follows:
 
 Adaptive difficulty tracks your level separately on seven skill tracks. Reports point out your weakest areas and offer a targeted drill. See the [Mental Math reference](#mental-math-reference) below.
 
-## Install & run
+## Install
+
+### Homebrew (macOS and Linux)
+
+```bash
+brew install MichiganElectronicTrading/tap/met-games
+met-games
+```
+
+To update to the latest release:
+
+```bash
+brew upgrade met-games
+```
+
+`met-games --version` prints the installed version.
+
+### uv (development, or without Homebrew)
 
 Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-uv run met-games            # run from the repo (creates the venv on first run)
+uv run met-games            # run from a clone of the repo (creates the venv on first run)
 # or install it as a tool:
 uv tool install .
 met-games
 ```
 
 `python -m met_games` also works inside the venv.
+
+## Run
 
 The app opens on the **MET GAMES** home screen, which lists every game plus SETTINGS and QUIT. Press ⏎ on a game to open its lobby. You can also go straight to a lobby:
 
@@ -317,6 +336,17 @@ tests/
 ```
 
 To add a game, create a new package under `met_games/games/` and add one `GameInfo` line to `GAMES` in `met_games/app.py`. If the game has settings, add a section to `SETTINGS_SECTIONS`.
+
+## Releasing
+
+The version is set only in `pyproject.toml`. `met_games.__version__` and `met-games --version` read it from the installed package.
+
+1. Set `version` in `pyproject.toml`, then run `uv sync`.
+2. Run `uv run pytest`; every test must pass. `tests/test_packaging.py` checks the version, `--version`, and that nothing writes inside the install directory.
+3. Run `rm -rf dist && uv build` to build `dist/met_games-X.Y.Z.tar.gz` and the wheel.
+4. Check the sdist without uv. In a fresh venv, run `python3 -m venv /tmp/met-check && /tmp/met-check/bin/pip install dist/*.tar.gz && /tmp/met-check/bin/met-games --version`. It must print `met-games X.Y.Z`.
+5. Tag `vX.Y.Z`, push the tag, and create a GitHub release with the sdist attached.
+6. In the `MichiganElectronicTrading/homebrew-tap` formula, update `url` to the new sdist and `sha256` to the output of `shasum -a 256 dist/met_games-X.Y.Z.tar.gz`. Then check it with `brew upgrade met-games && met-games --version`.
 
 ## Upgrading from mtt-games
 

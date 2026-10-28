@@ -3,8 +3,14 @@ name = "met-games"
 version = "0.1.0"
 description = "Solo trading drills for MET (Michigan Electronic Trading), in your terminal."
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = ["textual"]
+
+[project.urls]
+Homepage = "https://github.com/MichiganElectronicTrading/tradingGames"
+Repository = "https://github.com/MichiganElectronicTrading/tradingGames"
 
 [project.scripts]
 met-games = "met_games.__main__:main"
@@ -14,7 +20,7 @@ mtt-games = "met_games.__main__:legacy_main"  # old name, kept for now; remove i
 dev = ["pytest", "pytest-asyncio"]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27"]  # 1.27+ reads the PEP 639 license fields
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
